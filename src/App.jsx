@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from "react";
 import IntroCanvas from "./IntroCanvas.jsx";
-import EquationReveal from "./EquationReveal.jsx";
-import DoorScene from "./DoorScene.jsx";
+import TruthScreen from "./TruthScreen.jsx";
 import InfinityCursor from "./InfinityCursor.jsx";
 import TouchTrail from "./TouchTrail.jsx";
 import "./global.css";
@@ -9,34 +8,23 @@ import "./global.css";
 export default function App() {
   const [scene, setScene] = useState("intro");
 
-  // Click anywhere during intro OR equation → straight to 3 doors
+  // Click during intro → skip straight to truth screen
   const handleSkip = useCallback(() => {
-    if (scene !== "door") setScene("door");
+    if (scene === "intro") setScene("truth");
   }, [scene]);
 
   return (
-    <div
-      style={{ minHeight: "100vh", background: "#03030a" }}
-      onClick={handleSkip}
-    >
+    <div style={{ minHeight:"100vh", background:"#03030a" }}
+      onClick={handleSkip}>
       <InfinityCursor />
       <TouchTrail />
 
-      {/* Only render intro while in intro scene */}
       {scene === "intro" && (
-        <IntroCanvas onComplete={() => setScene("equation")} />
+        <IntroCanvas onComplete={() => setScene("truth")} />
       )}
-
-      {/* Only render equation while in equation scene */}
-      {scene === "equation" && (
-        <EquationReveal
-          showButton={false}
-          onComplete={() => setScene("door")}
-        />
+      {scene === "truth" && (
+        <TruthScreen />
       )}
-
-      {/* Door scene — stopPropagation already inside */}
-      <DoorScene visible={scene === "door"} />
     </div>
   );
 }
