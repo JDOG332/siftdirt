@@ -9,10 +9,9 @@ import "./global.css";
 export default function App() {
   const [scene, setScene] = useState("intro");
 
-  const handleSkip = useCallback((e) => {
-    if (scene === "intro" || scene === "equation") {
-      setScene("door");
-    }
+  // Click anywhere during intro OR equation → straight to 3 doors
+  const handleSkip = useCallback(() => {
+    if (scene !== "door") setScene("door");
   }, [scene]);
 
   return (
@@ -20,23 +19,23 @@ export default function App() {
       style={{ minHeight: "100vh", background: "#03030a" }}
       onClick={handleSkip}
     >
-      {/* Desktop: infinity loop cursor */}
       <InfinityCursor />
-
-      {/* Mobile: touch trail with lemniscate bloom */}
       <TouchTrail />
 
+      {/* Only render intro while in intro scene */}
       {scene === "intro" && (
         <IntroCanvas onComplete={() => setScene("equation")} />
       )}
 
-      {(scene === "equation" || scene === "door") && (
+      {/* Only render equation while in equation scene */}
+      {scene === "equation" && (
         <EquationReveal
           showButton={false}
           onComplete={() => setScene("door")}
         />
       )}
 
+      {/* Door scene — stopPropagation already inside */}
       <DoorScene visible={scene === "door"} />
     </div>
   );
