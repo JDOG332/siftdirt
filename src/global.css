@@ -1,3 +1,23 @@
+/* ── GLOBAL SCROLL — PHI min-height system ──────────────────────── */
+html {
+  scroll-behavior: smooth;
+  background: #03030a;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: #03030a;
+}
+body {
+  overflow-x: hidden;
+  overflow-y: auto;   /* allow vertical scroll when content > viewport */
+}
+#root {
+  min-height: 100vh;
+  background: #03030a;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

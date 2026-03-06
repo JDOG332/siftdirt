@@ -123,12 +123,15 @@ function buildSystem(W, H) {
   const fPsi     = doorW * PHIi4;           // Ψ symbol ~35px mobile
   const fHead    = doorW * PHIi6 * PHIi;    // CHOOSE YOUR PATH ~8px
 
+  // PHI breathing rule: minHeight = doorH × PHI
+  // Guarantees golden margin (doorH × PHIi) above + below content on any screen
+  const minH = Math.round(doorH * PHI);
+
   return {
     isMobile, doorW, doorH, archH, ornSz,
     panM, bridgeH, quoteM, phraseGap,
     fBase, fSub, fLabel, fPsi, fHead,
-    // total height the door+bridge+formula needs
-    totalH: doorH + bridgeH * 2 + Math.round(doorW * PHIi4 * PHI),
+    minH,
   };
 }
 
@@ -808,25 +811,36 @@ export default function TruthScreen() {
   const doorAreaTop  = Math.round((H - doorH - bridgeH * 3 - Math.round(fLabel * PHI2)) / 2);
   const clampedTop   = Math.max(Math.round(H * PHIi5), doorAreaTop);
 
+  // PHI breathing rule
+  const minH = sys.minH;
+
   return (
     <div style={{
-      position: "fixed", inset: 0,
+      position: "relative",
+      width: "100%",
+      minHeight: `${minH}px`,   // doorH × PHI — always fits, any screen
       background: "#03030a",
       opacity: fadeIn,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      overflow: "hidden",
+      overflow: "visible",
     }}>
-      {/* Ambient gold */}
+      {/* Fixed background layers — stay behind scroll */}
+      {/* Ambient gold — fixed so it doesn't scroll */}
       <div style={{
-        position:"absolute", inset:0, pointerEvents:"none",
+        position:"fixed", inset:0, pointerEvents:"none", zIndex:0,
         background:`radial-gradient(ellipse at 50% ${Math.round(PHIi2*100)}%,
           ${GOLD(O.whisper * doorT)} 0%, transparent 55%)`,
       }}/>
 
-      {/* ── SPACER ─────────────────────────────────────────── */}
-      <div style={{ flex: `0 0 ${clampedTop}px` }}/>
+      {/* ── CONTENT (above fixed bg layers) ──────────────── */}
+      <div style={{
+        position:"relative", zIndex:1,
+        width:"100%", display:"flex", flexDirection:"column",
+        alignItems:"center", flex:"none",
+        paddingTop: `${clampedTop}px`,
+      }}>
 
       {/* ── BIG DOOR ─────────────────────────────────────── */}
       <BigDoor
@@ -838,14 +852,14 @@ export default function TruthScreen() {
 
       {/* ── BRIDGE — door → FIND YOUR TRUTH → formula ───── */}
       <div style={{
-        flex: "1",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         gap: 0,
-        paddingBottom: Math.round(H * PHIi5),
+        paddingBottom: Math.round(minH * PHIi4),
         minHeight: Math.round(bridgeH * 3 + fLabel * PHI2),
+        width: "100%",
       }}>
         {/* Top bridge line */}
         <div style={{
@@ -888,18 +902,20 @@ export default function TruthScreen() {
         </div>
       </div>
 
-      {/* Vignette */}
+      </div>{/* end content wrapper */}
+
+      {/* Vignette — fixed */}
       <div style={{
-        position:"absolute", inset:0, pointerEvents:"none",
+        position:"fixed", inset:0, pointerEvents:"none", zIndex:0,
         background:`radial-gradient(ellipse at center,
           transparent ${Math.round(PHIi3*100)}%,
           rgba(0,0,0,${O.dim}) ${Math.round(PHIi*100)}%,
           rgba(0,0,0,${O.pres}) 100%)`,
       }}/>
 
-      {/* Grain */}
+      {/* Grain — fixed */}
       <div style={{
-        position:"absolute", inset:0, pointerEvents:"none", opacity: O.whisper,
+        position:"fixed", inset:0, pointerEvents:"none", opacity: O.whisper, zIndex:0,
         backgroundImage:`url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
         backgroundSize:"256px 256px",
       }}/>
