@@ -227,7 +227,7 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const [hover, setHover] = useState(false);
   const hA = hover ? 1 : 0;
   const { doorW: w, doorH: h, archH, ornSz, panM, quoteM, phraseGap,
-          fBase, fSub, bridgeH, isMobile } = sys;
+          fBase, fSub, isMobile } = sys;
 
   const fT = eo(t);
 
@@ -236,13 +236,12 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const iaH = archH * PHIi;    // inner arch panel height
   const mt  = archH * PHIi2;   // inner arch panel top margin
 
-  // Quote zone: centered between ornament bottom and handle
-  // ornBot → handleY, bridgeH gap each side → perfect midpoint centering
-  const ornTop_  = Math.round(archH * PHIi2);
-  const ornBot_  = ornTop_ + ornSz;
+  // Quote zone: symmetric around midpoint between archH and handleY
   const handleY  = Math.round(h * PHIi);
-  const quoteTop = ornBot_ + bridgeH;
-  const quoteBot = handleY - bridgeH;
+  const midpt    = Math.round((archH + handleY) / 2);
+  const zoneHalf = Math.round((handleY - archH) * PHIi2);
+  const quoteTop = midpt - zoneHalf;
+  const quoteBot = midpt + zoneHalf;
   const quoteInH = quoteBot - quoteTop;
 
   return (
@@ -920,15 +919,13 @@ function ThreeDoors({ t, W, H }) {
   };
 
   // Door sizing — PHI-derived
-  // sides one PHI step up, center one PHI step down vs original
-  // centerW = sideW × PHI exactly — always one level apart
   let sideW, centerW;
   if (isMobile) {
-    centerW = Math.min(Math.round(W * PHIi), 240);
+    centerW = Math.min(W * PHIi2, 170);
     sideW   = Math.round(centerW * PHIi);
   } else {
     const usable = Math.min(W * .85, 820);
-    sideW   = Math.round(usable / (2 + PHI));
+    sideW   = Math.round(usable / (2 + PHI + 2 * PHIi));
     centerW = Math.round(sideW * PHI);
   }
   const sideH   = Math.round(sideW   * PHI2);
@@ -1144,9 +1141,10 @@ export default function TruthScreen() {
   const formT  = sm(Math.max(0, (t - TIME.formula)  / TIME.doorFull));
   const fadeIn = eo(Math.min(1, t / (TIME.doorFull * PHIi)));
 
-  // FIND YOUR TRUTH: centered between page top and door top
-  // clampedTop = bridgeH → label center = doorTop / 2 exactly
-  const clampedTop = bridgeH;
+  // Layout: door area + bridge + formula pinned at bottom
+  // Use flexbox with spacer to push formula to bottom
+  // Pin FIND YOUR TRUTH close to top — H×PHIi6 breathing room only
+  const clampedTop = bridgeH;  // centers label between page-top and door-top
 
   // PHI breathing rule
   const minH = sys.minH;
