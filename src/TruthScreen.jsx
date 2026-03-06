@@ -1169,9 +1169,10 @@ export default function TruthScreen() {
         width:"100%", display:"flex", flexDirection:"column",
         alignItems:"center", flex:"none",
         paddingTop: `${clampedTop}px`,
+        paddingBottom: `${Math.round(H * PHIi5)}px`,
       }}>
 
-        {/* ── FIND YOUR TRUTH — hovers ABOVE the door ──────── */}
+        {/* ── FIND YOUR TRUTH — hovers above the door ──────── */}
         <div style={{
           fontFamily: CINZEL,
           fontSize: `${Math.round(fLabel)}px`,
@@ -1179,19 +1180,11 @@ export default function TruthScreen() {
           color: GOLD(O.mid * labelT),
           textAlign: "center",
           whiteSpace: "nowrap",
-          marginBottom: bridgeH,   // PHI gap between label and line
-          animation: labelT > .9 ? "breathe 3.4s ease-in-out infinite" : "none",
+          marginBottom: bridgeH,
           opacity: labelT,
           transform: `translateY(${(1 - labelT) * -8}px)`,
+          animation: labelT > .9 ? "breathe 3.4s ease-in-out infinite" : "none",
         }}>FIND YOUR TRUTH</div>
-
-        {/* Bridge line: label → door top */}
-        <div style={{
-          width: "1px",
-          height: bridgeH,
-          marginBottom: 0,
-          background: `linear-gradient(180deg, ${GOLD(O.ghost * labelT)}, ${GOLD(O.whisper * labelT)})`,
-        }}/>
 
         {/* ── BIG DOOR ───────────────────────────────────── */}
         <BigDoor
@@ -1201,18 +1194,10 @@ export default function TruthScreen() {
           onClick={handleDoorClick}
         />
 
-        {/* Bridge line: door bottom → formula */}
+        {/* ── FORMULA — one bridgeH below door, not touching */}
         <div style={{
-          width: "1px",
-          height: bridgeH,
-          background: `linear-gradient(180deg, ${GOLD(O.whisper * formT)}, ${GOLD(O.ghost * formT)})`,
-        }}/>
-
-        {/* ── FORMULA — tight below door ─────────────────── */}
-        <div style={{
-          paddingTop: Math.round(bridgeH * PHIi2),
-          paddingBottom: Math.round(minH * PHIi4),
-          paddingLeft: `clamp(${Math.round(doorW * PHIi4)}px, 5vw, ${Math.round(doorW * PHIi2)}px)`,
+          marginTop: bridgeH,
+          paddingLeft:  `clamp(${Math.round(doorW * PHIi4)}px, 5vw, ${Math.round(doorW * PHIi2)}px)`,
           paddingRight: `clamp(${Math.round(doorW * PHIi4)}px, 5vw, ${Math.round(doorW * PHIi2)}px)`,
           width: "100%",
           boxSizing: "border-box",
