@@ -558,14 +558,14 @@ function Dissolve({ W, H, active }) {
 const FLIP = Math.random() < .5;
 const DOOR_DEFS = FLIP
   ? [
-      { label:"PAPER", sublabel:"where we are",     href:"https://educationrevelation.com", delay:.14 },
+      { label:"PRAY",  sublabel:"where we are",     href:"https://educationrevelation.com", delay:.14 },
       { label:"PROOF", sublabel:"where we've been", href:"https://educationrevelation.com", delay:0   },
       { label:"POEMS", sublabel:"see our truth",    href:"https://educationrevelation.com", delay:.14 },
     ]
   : [
       { label:"POEMS", sublabel:"see our truth",    href:"https://educationrevelation.com", delay:.14 },
       { label:"PROOF", sublabel:"where we've been", href:"https://educationrevelation.com", delay:0   },
-      { label:"PAPER", sublabel:"where we are",     href:"https://educationrevelation.com", delay:.14 },
+      { label:"PRAY",  sublabel:"where we are",     href:"https://educationrevelation.com", delay:.14 },
     ];
 
 // ─────────────────────────────────────────────────────────────────
