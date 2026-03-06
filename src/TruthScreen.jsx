@@ -1134,7 +1134,9 @@ export default function TruthScreen() {
   // Layout: door area + bridge + formula pinned at bottom
   // Use flexbox with spacer to push formula to bottom
   // Pin FIND YOUR TRUTH close to top — H×PHIi6 breathing room only
-  const clampedTop = bridgeH;  // centers label between page-top and door-top
+  // Center FIND YOUR TRUTH between page top and gold glow above door
+  // glow top = padTop + labelH, so labelCenter = glow top / 2 when padTop → 0
+  const clampedTop = Math.round(H * PHIi6 * PHIi2);  // ~5px breathing floor
 
   // PHI breathing rule
   const minH = sys.minH;
@@ -1171,7 +1173,7 @@ export default function TruthScreen() {
         {/* ── FIND YOUR TRUTH — hovers above the door ──────── */}
         <div style={{
           fontFamily: CINZEL,
-          fontSize: `${Math.round(fLabel)}px`,
+          fontSize: `${Math.round(fLabel * PHI)}px`,
           letterSpacing: "0.5em",
           color: GOLD(O.mid * labelT),
           textAlign: "center",
