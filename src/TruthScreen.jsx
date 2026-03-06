@@ -753,14 +753,15 @@ function PrayScene({ W, H, startPos }) {
               width: vW, height: vH,
               opacity: videoO * PHIi,   // hazy — O.mid × PHIi ≈ 0.236 → 0.382
             }}>
-              <iframe
-                src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=0&rel=0&modestbranding=1&iv_load_policy=3"
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
+              <video
+                src="/pray.mp4"
+                autoPlay
+                loop
+                playsInline
                 style={{
                   position:"absolute", inset:0,
                   width:"100%", height:"100%",
-                  border:"none",
+                  objectFit:"cover",
                 }}
               />
             </div>
