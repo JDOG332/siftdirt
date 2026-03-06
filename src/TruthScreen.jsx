@@ -630,106 +630,144 @@ function SmallDoor({ w, h, isCenter, onClick }) {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// THREE DOORS SCREEN
+// THREE DOORS SCREEN — scrollable, PHI minHeight
 // ─────────────────────────────────────────────────────────────────
 function ThreeDoors({ t, W, H }) {
-  const sys = buildSystem(W, H);
-  const { isMobile } = sys;
+  const isMobile = W < 640;
   const headT = eo(Math.max(0, (t - .08) / .42));
 
-  // Side/center door sizes — PHI-derived from viewport
+  // Door sizing — PHI-derived
   let sideW, centerW;
   if (isMobile) {
     centerW = Math.min(W * PHIi2, 170);
     sideW   = Math.round(centerW * PHIi);
   } else {
     const usable = Math.min(W * .85, 820);
-    sideW   = Math.round(usable / (2 + PHI + 2*PHIi));
+    sideW   = Math.round(usable / (2 + PHI + 2 * PHIi));
     centerW = Math.round(sideW * PHI);
   }
-  const sideH   = Math.round(sideW * PHI2);
+  const sideH   = Math.round(sideW   * PHI2);
   const centerH = Math.round(centerW * PHI2);
   const doorGap = isMobile
     ? Math.round(sideW * PHIi2)
     : Math.round(sideW * PHIi);
 
-  // Font sizes — PHI-ladder from sideW
+  // PHI breathing rule: minHeight = centerH × PHI
+  const minH = Math.round(centerH * PHI);
+
+  // Padding top/bottom = (minH - centerH) / 2  →  exactly centerH×PHIi÷2 each side
+  const padV = Math.round((minH - centerH) * PHIi2);
+
+  // Font sizes — PHI-ladder
   const labelFS = `${Math.round(sideW * PHIi5)}px`;
   const subFS   = `${Math.round(sideW * PHIi6)}px`;
   const headFS  = isMobile
     ? `${Math.round(W * PHIi6 * PHIi)}px`
     : `${Math.round(W * PHIi6 * PHIi2)}px`;
 
+  // Gap between heading and doors
+  const sectionGap = Math.round(centerW * PHIi4);
+
   return (
-    <div onClick={e => e.stopPropagation()} style={{
-      position:"fixed", inset:0,
-      display:"flex", flexDirection:"column",
-      alignItems:"center", justifyContent:"center",
-      background:"rgba(3,3,10,.97)",
-      gap: isMobile ? Math.round(centerW * PHIi4) : Math.round(centerW * PHIi3),
-      padding:`0 clamp(12px,3vw,28px) clamp(14px,2.5vh,28px)`,
-      boxSizing:"border-box",
+    <div style={{
+      position: "relative",
+      width: "100%",
+      minHeight: `${minH}px`,
+      background: "#03030a",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingTop:    `${padV}px`,
+      paddingBottom: `${padV}px`,
+      paddingLeft:   "clamp(12px,3vw,28px)",
+      paddingRight:  "clamp(12px,3vw,28px)",
+      boxSizing: "border-box",
+      gap: sectionGap,
     }}>
+
+      {/* Fixed background layers */}
       <div style={{
-        position:"absolute", inset:0, pointerEvents:"none",
+        position:"fixed", inset:0, pointerEvents:"none", zIndex:0,
         background:`radial-gradient(ellipse at 50% 48%,${GOLD(O.whisper)} 0%,transparent 56%)`,
       }}/>
-
       <div style={{
-        fontFamily: CINZEL,
-        fontSize: headFS,
-        letterSpacing: "0.55em",
-        color: GOLD(O.mid * headT),
-        opacity: headT,
-        transform: `translateY(${(1-headT)*8}px)`,
-        textAlign:"center", whiteSpace:"nowrap",
-      }}>CHOOSE YOUR PATH</div>
-
-      <div style={{
-        display:"flex",
-        flexDirection: isMobile ? "column" : "row",
-        alignItems: isMobile ? "center" : "flex-end",
-        justifyContent:"center",
-        gap: doorGap,
-      }}>
-        {DOOR_DEFS.map(door => {
-          const isC = door.label === "POEMS";
-          const dW = isC ? centerW : sideW;
-          const dH = isC ? centerH : sideH;
-          const dt = eo(Math.max(0, (t - door.delay) / .52));
-          return (
-            <div key={door.label} style={{
-              display:"flex", flexDirection:"column",
-              alignItems:"center",
-              gap: Math.round(dW * PHIi5),
-              opacity: dt,
-              transform: `translateY(${(1-dt)*34}px)`,
-            }}>
-              <SmallDoor w={dW} h={dH} isCenter={isC}
-                onClick={() => window.open(door.href, "_blank")}/>
-              <div style={{
-                fontFamily: CINZEL, fontSize: labelFS,
-                letterSpacing: "0.42em",
-                color: GOLD(isC ? O.pres : O.mid),
-                textAlign:"center", whiteSpace:"nowrap",
-                textShadow: isC ? `0 0 ${Math.round(dW*PHIi3)}px ${GOLD(O.dim)}` : "none",
-              }}>{door.label}</div>
-              <div style={{
-                fontFamily: CORRO, fontStyle:"italic",
-                fontSize: subFS, letterSpacing:"0.2em",
-                color: SILVER(isC ? O.mid : O.dim),
-                textAlign:"center", whiteSpace:"nowrap",
-                marginTop: -Math.round(dW * PHIi5 * PHIi),
-              }}>{door.sublabel}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={{
-        position:"absolute", inset:0, pointerEvents:"none",
+        position:"fixed", inset:0, pointerEvents:"none", zIndex:0,
         background:"radial-gradient(ellipse at center,transparent 36%,rgba(0,0,0,.42) 70%,rgba(0,0,0,.9) 100%)",
       }}/>
+
+      {/* Content — above fixed layers */}
+      <div style={{ position:"relative", zIndex:1, width:"100%", display:"flex",
+        flexDirection:"column", alignItems:"center", gap: sectionGap }}>
+
+        {/* CHOOSE YOUR PATH */}
+        <div style={{
+          fontFamily: CINZEL,
+          fontSize: headFS,
+          letterSpacing: "0.55em",
+          color: GOLD(O.mid * headT),
+          opacity: headT,
+          transform: `translateY(${(1 - headT) * 8}px)`,
+          textAlign: "center",
+          whiteSpace: "nowrap",
+        }}>CHOOSE YOUR PATH</div>
+
+        {/* Doors */}
+        <div style={{
+          display: "flex",
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "center" : "flex-end",
+          justifyContent: "center",
+          gap: doorGap,
+        }}>
+          {DOOR_DEFS.map(door => {
+            const isC = door.label === "POEMS";
+            const dW  = isC ? centerW : sideW;
+            const dH  = isC ? centerH : sideH;
+            const dt  = eo(Math.max(0, (t - door.delay) / .52));
+            // Per-door gap below (between door SVG and label)
+            const itemGap = Math.round(dW * PHIi5);
+            return (
+              <div key={door.label} style={{
+                display:"flex", flexDirection:"column",
+                alignItems:"center",
+                gap: itemGap,
+                opacity: dt,
+                transform: `translateY(${(1 - dt) * 34}px)`,
+              }}>
+                <SmallDoor w={dW} h={dH} isCenter={isC}
+                  onClick={() => window.open(door.href, "_blank")}/>
+
+                {/* Label */}
+                <div style={{
+                  fontFamily: CINZEL,
+                  fontSize: labelFS,
+                  letterSpacing: "0.42em",
+                  color: GOLD(isC ? O.pres : O.mid),
+                  textAlign: "center",
+                  whiteSpace: "nowrap",
+                  textShadow: isC
+                    ? `0 0 ${Math.round(dW * PHIi3)}px ${GOLD(O.dim)}`
+                    : "none",
+                }}>{door.label}</div>
+
+                {/* Sublabel */}
+                <div style={{
+                  fontFamily: CORRO,
+                  fontStyle: "italic",
+                  fontSize: subFS,
+                  letterSpacing: "0.2em",
+                  color: SILVER(isC ? O.mid : O.dim),
+                  textAlign: "center",
+                  whiteSpace: "nowrap",
+                  marginTop: -Math.round(itemGap * PHIi),
+                }}>{door.sublabel}</div>
+              </div>
+            );
+          })}
+        </div>
+
+      </div>{/* end content */}
     </div>
   );
 }
