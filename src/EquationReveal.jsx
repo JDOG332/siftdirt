@@ -12,7 +12,17 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { PHI, PHI_INV } from "./data.js";
 import { computeR12, initializeBlochVectors } from "./psi-engine.js";
 
-const TOTAL_MS = 14000;
+const TOTAL_MS = 22000;
+
+// Quote: appears after equation fades
+const QUOTE = "Truth is found by removing noise, watching without blinking, and holding reality from three angles until it can't slip away."
+const QUOTE_PARTS = [
+  "Truth is found",
+  "by removing noise,",
+  "watching without blinking,",
+  "and holding reality from three angles",
+  "until it can't slip away.",
+];
 const CINZEL = "'Cinzel', serif";
 const CORRO  = "'Cormorant Garamond', Georgia, serif";
 
@@ -440,6 +450,54 @@ function EquationLayer({ phases, W, H, isMobile }) {
   );
 }
 
+// ── Quote layer ───────────────────────────────────────────────
+function QuoteLayer({ t, isMobile }) {
+  if (t <= 0) return null;
+  const te = easeOut(t);
+
+  return (
+    <div style={{
+      position: "absolute", inset: 0,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "0 clamp(28px,8vw,120px)",
+      opacity: te,
+    }}>
+      <div style={{
+        display: "flex", flexDirection: "column",
+        alignItems: "center", gap: "clamp(8px,1.8vh,18px)",
+        maxWidth: 680,
+        textAlign: "center",
+      }}>
+        {QUOTE_PARTS.map((part, i) => {
+          const partT = easeOut(Math.max(0, Math.min(1, (t - i * 0.14) / 0.4)));
+          return (
+            <div key={i} style={{
+              fontFamily: CORRO,
+              fontStyle: "italic",
+              fontWeight: 300,
+              fontSize: i === 0
+                ? "clamp(18px,3.8vw,32px)"
+                : "clamp(14px,2.8vw,24px)",
+              letterSpacing: i === 0 ? "0.06em" : "0.03em",
+              lineHeight: 1.5,
+              color: i === 0
+                ? `rgba(232,232,240,${partT * 0.88})`
+                : `rgba(200,200,215,${partT * 0.62})`,
+              opacity: partT,
+              transform: `translateY(${(1 - partT) * 12}px)`,
+              textShadow: i === 0
+                ? `0 0 60px rgba(201,168,76,${partT * 0.08})`
+                : "none",
+            }}>
+              {part}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────
 export default function EquationReveal({ onComplete }) {
   const canvasRef    = useRef(null);
@@ -451,6 +509,7 @@ export default function EquationReveal({ onComplete }) {
   const [phases, setPhases] = useState({
     t: 0,
     leftT:0, funnelT:0, rightT:0, equalT:0,
+    eqFadeOut:1, quoteT:0,
     t1L:0, t2L:0, t3L:0, t4L:0,
     t1R:0, t2R:0, t3R:0,
   });
@@ -477,16 +536,27 @@ export default function EquationReveal({ onComplete }) {
       const elapsed = now - startRef.current;
       const t = elapsed / TOTAL_MS;
 
-      const vE  = 1500  / TOTAL_MS;
-      const lE  = 5000  / TOTAL_MS;
-      const fE  = 7500  / TOTAL_MS;
-      const rE  = 11000 / TOTAL_MS;
-      const eqE = 13000 / TOTAL_MS;
+      const vE    = 1500  / TOTAL_MS;
+      const lE    = 5000  / TOTAL_MS;
+      const fE    = 7500  / TOTAL_MS;
+      const rE    = 11000 / TOTAL_MS;
+      const eqE   = 13000 / TOTAL_MS;
+      const holdE = 15000 / TOTAL_MS; // equation holds
+      const fadeE = 16500 / TOTAL_MS; // equation fades to black
+      const qE    = 17500 / TOTAL_MS; // quote begins
 
-      const leftT   = smootherstep(Math.max(0, Math.min(1, (t - vE)  / (lE - vE))));
-      const funnelT = smootherstep(Math.max(0, Math.min(1, (t - lE)  / (fE - lE))));
-      const rightT  = smootherstep(Math.max(0, Math.min(1, (t - fE)  / (rE - fE))));
-      const equalT  = smootherstep(Math.max(0, Math.min(1, (t - rE)  / (eqE - rE))));
+      const leftT   = smootherstep(Math.max(0, Math.min(1, (t - vE)     / (lE   - vE))));
+      const funnelT = smootherstep(Math.max(0, Math.min(1, (t - lE)     / (fE   - lE))));
+      const rightT  = smootherstep(Math.max(0, Math.min(1, (t - fE)     / (rE   - fE))));
+      const equalT  = smootherstep(Math.max(0, Math.min(1, (t - rE)     / (eqE  - rE))));
+
+      // Equation fades out after hold
+      const eqFadeOut = t > holdE
+        ? 1 - smootherstep(Math.max(0, Math.min(1, (t - holdE) / (fadeE - holdE))))
+        : 1;
+
+      // Quote phase
+      const quoteT = smootherstep(Math.max(0, Math.min(1, (t - qE) / (1 - qE))));
 
       // Left terms stagger
       const lDur = lE - vE;
@@ -503,7 +573,7 @@ export default function EquationReveal({ onComplete }) {
 
       drawCanvas(ctx, canvas.width, canvas.height, t, elapsed, pfRef.current);
 
-      setPhases({ t, leftT, funnelT, rightT, equalT, t1L, t2L, t3L, t4L, t1R, t2R, t3R });
+      setPhases({ t, leftT, funnelT, rightT, equalT, eqFadeOut, quoteT, t1L, t2L, t3L, t4L, t1R, t2R, t3R });
 
       if (t < 1) {
         rafRef.current = requestAnimationFrame(loop);
@@ -526,17 +596,22 @@ export default function EquationReveal({ onComplete }) {
         width: "100%", height: "100%", display: "block",
       }} />
 
-      {/* Ψ background glow */}
-      {phases.rightT > 0 && (
-        <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: `radial-gradient(ellipse at 60% 50%,
-            rgba(201,168,76,${phases.t1R*0.045}) 0%,
-            transparent 60%)`,
-        }} />
-      )}
+      {/* Equation — fades out */}
+      <div style={{ position:"absolute", inset:0, opacity: phases.eqFadeOut ?? 1, transition:"none" }}>
+        {/* Ψ background glow */}
+        {phases.rightT > 0 && (
+          <div style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: `radial-gradient(ellipse at 60% 50%,
+              rgba(201,168,76,${phases.t1R*0.045}) 0%,
+              transparent 60%)`,
+          }} />
+        )}
+        <EquationLayer phases={phases} W={dims.W} H={dims.H} isMobile={isMobile} />
+      </div>
 
-      <EquationLayer phases={phases} W={dims.W} H={dims.H} isMobile={isMobile} />
+      {/* Quote */}
+      <QuoteLayer t={phases.quoteT ?? 0} isMobile={isMobile} />
 
       {/* Grain */}
       <div style={{
