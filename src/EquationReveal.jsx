@@ -451,7 +451,7 @@ function EquationLayer({ phases, W, H, isMobile }) {
 }
 
 // ── Quote layer ───────────────────────────────────────────────
-function QuoteLayer({ t, buttonT, isMobile }) {
+function QuoteLayer({ t, buttonT, isMobile, showButton = true }) {
   if (t <= 0) return null;
   const te = easeOut(t);
   const [hover, setHover] = useState(false);
@@ -492,7 +492,7 @@ function QuoteLayer({ t, buttonT, isMobile }) {
         })}
       </div>
 
-      {bt > 0 && (
+      {showButton && bt > 0 && (
         <div style={{ opacity: bt, transform: `translateY(${(1 - bt) * 18}px)` }}>
           <a
             href="https://educationrevelation.com"
@@ -528,7 +528,7 @@ function QuoteLayer({ t, buttonT, isMobile }) {
 }
 
 // ── Main component ────────────────────────────────────────────
-export default function EquationReveal({ onComplete }) {
+export default function EquationReveal({ onComplete, showButton = true }) {
   const canvasRef    = useRef(null);
   const rafRef       = useRef(null);
   const startRef     = useRef(null);
@@ -641,7 +641,7 @@ export default function EquationReveal({ onComplete }) {
       </div>
 
       {/* Quote */}
-      <QuoteLayer t={phases.quoteT ?? 0} buttonT={phases.buttonT ?? 0} isMobile={isMobile} />
+      <QuoteLayer t={phases.quoteT ?? 0} buttonT={phases.buttonT ?? 0} isMobile={isMobile} showButton={showButton} />
 
       {/* Grain */}
       <div style={{

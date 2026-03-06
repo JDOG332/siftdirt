@@ -1,27 +1,27 @@
 import React, { useState, useCallback } from "react";
 import IntroCanvas from "./IntroCanvas.jsx";
 import EquationReveal from "./EquationReveal.jsx";
+import DoorScene from "./DoorScene.jsx";
 import "./global.css";
 
 export default function App() {
   const [scene, setScene] = useState("intro");
-
-  const handleIntroComplete = useCallback(() => setScene("equation"), []);
-  const handleEquationComplete = useCallback(() => setScene("hold"), []);
+  // "intro" → "equation" → "door"
+  // DoorScene overlays on top of equation once quote is done
 
   return (
     <div style={{ minHeight: "100vh", background: "#03030a" }}>
-
-      {/* INTRO — 10s Ψ animation */}
       {scene === "intro" && (
-        <IntroCanvas onComplete={handleIntroComplete} />
+        <IntroCanvas onComplete={() => setScene("equation")} />
       )}
-
-      {/* EQUATION REVEAL — assembles itself */}
-      {(scene === "equation" || scene === "hold") && (
-        <EquationReveal onComplete={handleEquationComplete} />
+      {(scene === "equation" || scene === "door") && (
+        <EquationReveal
+          showButton={false}
+          onComplete={() => setScene("door")}
+        />
       )}
-
+      {/* Door scene layers on top after equation completes */}
+      <DoorScene visible={scene === "door"} />
     </div>
   );
 }
