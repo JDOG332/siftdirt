@@ -919,13 +919,15 @@ function ThreeDoors({ t, W, H }) {
   };
 
   // Door sizing — PHI-derived
+  // sides one PHI step up, center one PHI step down vs original
+  // centerW = sideW × PHI exactly — always one level apart
   let sideW, centerW;
   if (isMobile) {
-    centerW = Math.min(W * PHIi2, 170);
+    centerW = Math.min(Math.round(W * PHIi), 240);
     sideW   = Math.round(centerW * PHIi);
   } else {
     const usable = Math.min(W * .85, 820);
-    sideW   = Math.round(usable / (2 + PHI + 2 * PHIi));
+    sideW   = Math.round(usable / (2 + PHI));
     centerW = Math.round(sideW * PHI);
   }
   const sideH   = Math.round(sideW   * PHI2);
