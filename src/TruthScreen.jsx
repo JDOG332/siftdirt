@@ -728,7 +728,7 @@ function PrayScene({ W, H, startPos }) {
         borderRadius:`${Math.round(doorW * PHIi3)}px ${Math.round(doorW * PHIi3)}px 0 0`,
       }}/>
 
-      {/* ── VIDEO — clipped to morphing arch shape ────────────── */}
+      {/* ── VIDEO — clipped to arch, small & distant ─────────── */}
       <div style={{
         position:"absolute",
         left: doorX, top: doorY,
@@ -736,18 +736,53 @@ function PrayScene({ W, H, startPos }) {
         clipPath: archClip,
         WebkitClipPath: archClip,
         overflow:"hidden",
+        background:"rgba(3,4,14,.96)",   // dark arch interior — the wall around the window
       }}>
-        <iframe
-          src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=0&rel=0&modestbranding=1&iv_load_policy=3"
-          allow="autoplay; encrypted-media; fullscreen"
-          allowFullScreen
-          style={{
-            position:"absolute", inset:0,
-            width:"100%", height:"100%",
-            border:"none",
-            opacity: videoO,
-          }}
-        />
+        {/* Video — small, centered, feels far away */}
+        {/* Scale: PHIi² at start (tiny/distant) → PHIi at end (still not full — always feels far) */}
+        {(() => {
+          const vScale = PHIi2 + (PHIi - PHIi2) * p;  // 0.382 → 0.618
+          const vW = Math.round(doorW * vScale);
+          const vH = Math.round(doorH * vScale);
+          const vLeft = Math.round((doorW - vW) / 2);
+          const vTop  = Math.round((doorH - vH) / 2);
+          return (
+            <div style={{
+              position:"absolute",
+              left: vLeft, top: vTop,
+              width: vW, height: vH,
+              opacity: videoO * PHIi,   // hazy — O.mid × PHIi ≈ 0.236 → 0.382
+            }}>
+              <iframe
+                src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=0&rel=0&modestbranding=1&iv_load_policy=3"
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+                style={{
+                  position:"absolute", inset:0,
+                  width:"100%", height:"100%",
+                  border:"none",
+                }}
+              />
+            </div>
+          );
+        })()}
+
+        {/* Atmospheric depth haze — dark at arch edges, clears toward center */}
+        <div style={{
+          position:"absolute", inset:0, pointerEvents:"none",
+          background:`radial-gradient(ellipse at 50% 55%,
+            transparent 0%,
+            rgba(3,4,14,${O.mid}) ${Math.round(PHIi*100)}%,
+            rgba(3,4,14,${O.pres}) 100%)`,
+        }}/>
+
+        {/* Subtle inner glow where the distant light comes from */}
+        <div style={{
+          position:"absolute", inset:0, pointerEvents:"none",
+          background:`radial-gradient(ellipse at 50% 55%,
+            ${GOLD(O.ghost * p)} 0%,
+            transparent ${Math.round(PHIi2*100)}%)`,
+        }}/>
       </div>
 
       {/* ── DOOR/WINDOW FRAME — no fill, on top of video ─────── */}
