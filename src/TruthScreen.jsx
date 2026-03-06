@@ -554,16 +554,17 @@ function Dissolve({ W, H, active }) {
 // ─────────────────────────────────────────────────────────────────
 // 50/50 SIDE DOORS (random each load)
 // ─────────────────────────────────────────────────────────────────
+// PROOF always center. PAPER & POEMS random left/right each load.
 const FLIP = Math.random() < .5;
 const DOOR_DEFS = FLIP
   ? [
       { label:"PAPER", sublabel:"where we are",     href:"https://educationrevelation.com", delay:.14 },
-      { label:"POEMS", sublabel:"see our truth",    href:"https://educationrevelation.com", delay:0   },
-      { label:"PROOF", sublabel:"where we've been", href:"https://educationrevelation.com", delay:.14 },
+      { label:"PROOF", sublabel:"where we've been", href:"https://educationrevelation.com", delay:0   },
+      { label:"POEMS", sublabel:"see our truth",    href:"https://educationrevelation.com", delay:.14 },
     ]
   : [
-      { label:"PROOF", sublabel:"where we've been", href:"https://educationrevelation.com", delay:.14 },
-      { label:"POEMS", sublabel:"see our truth",    href:"https://educationrevelation.com", delay:0   },
+      { label:"POEMS", sublabel:"see our truth",    href:"https://educationrevelation.com", delay:.14 },
+      { label:"PROOF", sublabel:"where we've been", href:"https://educationrevelation.com", delay:0   },
       { label:"PAPER", sublabel:"where we are",     href:"https://educationrevelation.com", delay:.14 },
     ];
 
@@ -721,7 +722,7 @@ function ThreeDoors({ t, W, H }) {
           gap: doorGap,
         }}>
           {DOOR_DEFS.map(door => {
-            const isC = door.label === "POEMS";
+            const isC = door.label === "PROOF";
             const dW  = isC ? centerW : sideW;
             const dH  = isC ? centerH : sideH;
             const dt  = eo(Math.max(0, (t - door.delay) / .52));
