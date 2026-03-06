@@ -451,33 +451,32 @@ function EquationLayer({ phases, W, H, isMobile }) {
 }
 
 // ── Quote layer ───────────────────────────────────────────────
-function QuoteLayer({ t, isMobile }) {
+function QuoteLayer({ t, buttonT, isMobile }) {
   if (t <= 0) return null;
   const te = easeOut(t);
+  const [hover, setHover] = useState(false);
+  const bt = easeOut(buttonT ?? 0);
 
   return (
     <div style={{
       position: "absolute", inset: 0,
-      display: "flex", alignItems: "center", justifyContent: "center",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
       padding: "0 clamp(28px,8vw,120px)",
+      gap: "clamp(32px,5vh,56px)",
       opacity: te,
     }}>
       <div style={{
         display: "flex", flexDirection: "column",
         alignItems: "center", gap: "clamp(8px,1.8vh,18px)",
-        maxWidth: 680,
-        textAlign: "center",
+        maxWidth: 680, textAlign: "center",
       }}>
         {QUOTE_PARTS.map((part, i) => {
           const partT = easeOut(Math.max(0, Math.min(1, (t - i * 0.14) / 0.4)));
           return (
             <div key={i} style={{
-              fontFamily: CORRO,
-              fontStyle: "italic",
-              fontWeight: 300,
-              fontSize: i === 0
-                ? "clamp(18px,3.8vw,32px)"
-                : "clamp(14px,2.8vw,24px)",
+              fontFamily: CORRO, fontStyle: "italic", fontWeight: 300,
+              fontSize: i === 0 ? "clamp(18px,3.8vw,32px)" : "clamp(14px,2.8vw,24px)",
               letterSpacing: i === 0 ? "0.06em" : "0.03em",
               lineHeight: 1.5,
               color: i === 0
@@ -485,15 +484,45 @@ function QuoteLayer({ t, isMobile }) {
                 : `rgba(200,200,215,${partT * 0.62})`,
               opacity: partT,
               transform: `translateY(${(1 - partT) * 12}px)`,
-              textShadow: i === 0
-                ? `0 0 60px rgba(201,168,76,${partT * 0.08})`
-                : "none",
+              textShadow: i === 0 ? `0 0 60px rgba(201,168,76,${partT * 0.08})` : "none",
             }}>
               {part}
             </div>
           );
         })}
       </div>
+
+      {bt > 0 && (
+        <div style={{ opacity: bt, transform: `translateY(${(1 - bt) * 18}px)` }}>
+          <a
+            href="https://educationrevelation.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            style={{
+              display: "inline-block",
+              fontFamily: "'Cinzel', serif",
+              fontSize: "clamp(10px,2.2vw,13px)",
+              letterSpacing: "0.45em",
+              textDecoration: "none",
+              color: hover ? "rgba(235,205,110,0.95)" : "rgba(201,168,76,0.65)",
+              padding: "clamp(12px,2vh,18px) clamp(28px,4vw,52px)",
+              border: `1px solid ${hover ? "rgba(201,168,76,0.45)" : "rgba(201,168,76,0.18)"}`,
+              borderRadius: 2,
+              background: hover ? "rgba(201,168,76,0.04)" : "transparent",
+              boxShadow: hover
+                ? "0 0 40px rgba(201,168,76,0.1), inset 0 0 30px rgba(0,0,0,0.3)"
+                : "inset 0 0 30px rgba(0,0,0,0.3)",
+              transition: "all 0.618s cubic-bezier(0.23,1,0.32,1)",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            FIND YOUR TRUTH
+          </a>
+        </div>
+      )}
     </div>
   );
 }
@@ -509,7 +538,7 @@ export default function EquationReveal({ onComplete }) {
   const [phases, setPhases] = useState({
     t: 0,
     leftT:0, funnelT:0, rightT:0, equalT:0,
-    eqFadeOut:1, quoteT:0,
+    eqFadeOut:1, quoteT:0, buttonT:0,
     t1L:0, t2L:0, t3L:0, t4L:0,
     t1R:0, t2R:0, t3R:0,
   });
@@ -556,7 +585,8 @@ export default function EquationReveal({ onComplete }) {
         : 1;
 
       // Quote phase
-      const quoteT = smootherstep(Math.max(0, Math.min(1, (t - qE) / (1 - qE))));
+      const quoteT  = smootherstep(Math.max(0, Math.min(1, (t - qE) / (1 - qE))));
+      const buttonT = smootherstep(Math.max(0, Math.min(1, (t - (qE + 0.055)) / 0.09)));
 
       // Left terms stagger
       const lDur = lE - vE;
@@ -573,7 +603,7 @@ export default function EquationReveal({ onComplete }) {
 
       drawCanvas(ctx, canvas.width, canvas.height, t, elapsed, pfRef.current);
 
-      setPhases({ t, leftT, funnelT, rightT, equalT, eqFadeOut, quoteT, t1L, t2L, t3L, t4L, t1R, t2R, t3R });
+      setPhases({ t, leftT, funnelT, rightT, equalT, eqFadeOut, quoteT, buttonT, t1L, t2L, t3L, t4L, t1R, t2R, t3R });
 
       if (t < 1) {
         rafRef.current = requestAnimationFrame(loop);
@@ -611,7 +641,7 @@ export default function EquationReveal({ onComplete }) {
       </div>
 
       {/* Quote */}
-      <QuoteLayer t={phases.quoteT ?? 0} isMobile={isMobile} />
+      <QuoteLayer t={phases.quoteT ?? 0} buttonT={phases.buttonT ?? 0} isMobile={isMobile} />
 
       {/* Grain */}
       <div style={{
