@@ -236,12 +236,13 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const iaH = archH * PHIi;    // inner arch panel height
   const mt  = archH * PHIi2;   // inner arch panel top margin
 
-  // Quote zone: symmetric around midpoint between archH and handleY
+  // Quote zone: ornament bottom → just above handle circle
+  // Sits in the open upper-body space, clearing the handle below
   const handleY  = Math.round(h * PHIi);
-  const midpt    = Math.round((archH + handleY) / 2);
-  const zoneHalf = Math.round((handleY - archH) * PHIi2);
-  const quoteTop = midpt - zoneHalf;
-  const quoteBot = midpt + zoneHalf;
+  const ornTop_  = Math.round(archH * PHIi2);
+  const ornBot_  = ornTop_ + ornSz;
+  const quoteTop = ornBot_ + bridgeH;
+  const quoteBot = handleY - bridgeH;
   const quoteInH = quoteBot - quoteTop;
 
   return (
@@ -1139,9 +1140,8 @@ export default function TruthScreen() {
   // Layout: door area + bridge + formula pinned at bottom
   // Use flexbox with spacer to push formula to bottom
   // Pin FIND YOUR TRUTH close to top — H×PHIi6 breathing room only
-  // Center FIND YOUR TRUTH between page top and gold glow above door
-  // glow top = padTop + labelH, so labelCenter = glow top / 2 when padTop → 0
-  const clampedTop = Math.round(H * PHIi6 * PHIi2);  // ~5px breathing floor
+  // Shift everything down slightly — H×PHIi6 breathing at top
+  const clampedTop = Math.round(H * PHIi6);
 
   // PHI breathing rule
   const minH = sys.minH;
