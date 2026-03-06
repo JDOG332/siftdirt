@@ -236,12 +236,13 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const iaH = archH * PHIi;    // inner arch panel height
   const mt  = archH * PHIi2;   // inner arch panel top margin
 
-  // Quote zone centered on handle circle (handle is at h×PHIi exactly)
-  // Zone extends doorH×PHIi3 above and below handle — symmetric, centered on the target
+  // Quote zone: centered between ornament bottom and handle
+  // ornBot → handleY, bridgeH gap each side → perfect midpoint centering
+  const ornTop_  = Math.round(archH * PHIi2);
+  const ornBot_  = ornTop_ + ornSz;
   const handleY  = Math.round(h * PHIi);
-  const zoneHalf = Math.round(h * PHIi3);
-  const quoteTop = handleY - zoneHalf;
-  const quoteBot = handleY + zoneHalf;
+  const quoteTop = ornBot_ + bridgeH;
+  const quoteBot = handleY - bridgeH;
   const quoteInH = quoteBot - quoteTop;
 
   return (
@@ -367,8 +368,8 @@ function BigDoor({ sys, t, quoteT, onClick }) {
       <div style={{
         position: "absolute",
         top: quoteTop,
-        left: Math.round(w * PHIi4),
-        right: Math.round(w * PHIi4),
+        left: Math.round(w * PHIi5),
+        right: Math.round(w * PHIi5),
         height: quoteInH,
         display: "flex",
         flexDirection: "column",
@@ -1143,10 +1144,9 @@ export default function TruthScreen() {
   const formT  = sm(Math.max(0, (t - TIME.formula)  / TIME.doorFull));
   const fadeIn = eo(Math.min(1, t / (TIME.doorFull * PHIi)));
 
-  // Layout: door area + bridge + formula pinned at bottom
-  // Use flexbox with spacer to push formula to bottom
-  // Pin FIND YOUR TRUTH close to top — H×PHIi6 breathing room only
-  const clampedTop = Math.round(H * PHIi6);
+  // FIND YOUR TRUTH: centered between page top and door top
+  // clampedTop = bridgeH → label center = doorTop / 2 exactly
+  const clampedTop = bridgeH;
 
   // PHI breathing rule
   const minH = sys.minH;
