@@ -632,26 +632,23 @@ function SmallDoor({ w, h, isCenter, onClick }) {
 
 
 // ─────────────────────────────────────────────────────────────────
-// PRAY SCENE — one simultaneous motion
+// PRAY SCENE — single motion, shape morphs door → window
 //
-// On click, in a single animation:
-//   POEMS & PROOF  →  shrink + fade to nothing
-//   PRAY door      →  grows from three-doors size to fill screen
-//   video          →  starts tiny inside arch (far away),
-//                     rushes toward viewer as door expands,
-//                     fills arch exactly when door reaches full size
+// Width, height AND arch all interpolate simultaneously:
+//   START  tall door  (PHI² aspect, PHIi arch)
+//   END    wide window (PHI aspect landscape, PHIi² flat lintel)
 //
-// Video is always clipped to the arch shape — it never bleeds outside.
-// The arch is a portal. The video is what was always on the other side.
+// The arch flattens as the window widens — you feel the door
+// transforming into a window as it grows toward you.
+//
+// Video is always clipped to the current arch shape.
 // ─────────────────────────────────────────────────────────────────
 function PrayScene({ W, H, startPos }) {
-  // startPos = { x, y, w, h } — exact position of PRAY door in ThreeDoors
   const [elapsed, setElapsed] = useState(0);
   const rafRef   = useRef(null);
   const startRef = useRef(null);
 
-  // Single animation duration — T×PHI² = 1.618s
-  const DURATION = PHIi * PHI2 * 1000;
+  const DURATION = PHIi * PHI2 * 1000;   // 1.618s — one breath
 
   useEffect(() => {
     function loop(now) {
@@ -665,54 +662,59 @@ function PrayScene({ W, H, startPos }) {
   }, []);
 
   const raw = Math.min(1, elapsed / DURATION);
-  const p   = eio(raw);   // easeInOut — smooth single breath
+  const p   = eio(raw);   // easeInOut — single smooth breath
 
-  // ── Target (full) door size ───────────────────────────────────
+  // ── START shape — tall door (from ThreeDoors) ─────────────────
+  const sW = startPos.w;
+  const sH = startPos.h;
+  const sArch = Math.round(sW * PHIi);    // tall arch
+
+  // ── END shape — wide window (PHI landscape golden rect) ───────
   const isMobile = W < 640;
-  const fullW = isMobile
-    ? Math.round(W * PHIi)
-    : Math.round(Math.min(W * PHIi2, H * PHIi3));
-  const fullH  = Math.round(fullW * PHI2);
-  const fullX  = (W - fullW) / 2;
-  const fullY  = H * PHIi2 - fullH / 2;
+  const eW    = Math.round(W * PHIi);          // wide: 62% of viewport
+  const eH    = Math.round(W * PHIi2);         // short: PHI ratio landscape
+  const eArch = Math.round(eW * PHIi2);        // flat lintel
 
-  // ── Current door rect — interpolates start → full ─────────────
-  const doorW = Math.round(startPos.w + (fullW - startPos.w) * p);
-  const doorH = Math.round(startPos.h + (fullH - startPos.h) * p);
-  const doorX = startPos.x + (fullX - startPos.x) * p;
-  const doorY = startPos.y + (fullY - startPos.y) * p;
+  // Center positions
+  const sCx = startPos.x + sW / 2;
+  const sCy = startPos.y + sH / 2;
+  const eCx = W / 2;
+  const eCy = H * PHIi2;                       // golden vertical position
 
-  const archH = Math.round(doorW * PHIi);
-  const ornSz = Math.round(archH * PHIi * .82);
+  // ── Interpolate all three ─────────────────────────────────────
+  const doorW = Math.round(sW    + (eW    - sW)    * p);
+  const doorH = Math.round(sH    + (eH    - sH)    * p);
+  const archH = Math.round(sArch + (eArch - sArch) * p);
+
+  // Current center — tracks from start position to screen center
+  const cx  = sCx + (eCx - sCx) * p;
+  const cy  = sCy + (eCy - sCy) * p;
+
+  // Door top-left
+  const doorX = cx - doorW / 2;
+  const doorY = cy - doorH / 2;
+
   const m     = Math.round(doorW * PHIi3);
+  const ornSz = Math.round(archH * PHIi * .82);
 
-  // ── Arch clip path (relative to door rect) ───────────────────
-  // Used for clipPath on the video container
-  const archClip = `path('M0 ${archH} Q0 0 ${doorW/2} 0 Q${doorW} 0 ${doorW} ${archH} L${doorW} ${doorH} L0 ${doorH} Z')`;
+  // ── Arch path (relative, for frame SVG) ───────────────────────
+  const archRel = `M0 ${archH} Q0 0 ${doorW/2} 0 Q${doorW} 0 ${doorW} ${archH} L${doorW} ${doorH} L0 ${doorH} Z`;
 
-  // ── Video zoom — starts at PHIi² (38%) fills to 100% ─────────
-  // Video appears far away (small) when door is small,
-  // rushes forward — it zooms FASTER than the door grows
-  // so by the time door is full, video fills the arch completely
-  const videoScale = PHIi2 + (1 - PHIi2) * p;
+  // ── Arch clip (absolute, for video container) ──────────────────
+  const archClip = `path('M${doorX} ${doorY+archH} Q${doorX} ${doorY} ${doorX+doorW/2} ${doorY} Q${doorX+doorW} ${doorY} ${doorX+doorW} ${doorY+archH} L${doorX+doorW} ${doorY+doorH} L${doorX} ${doorY+doorH} Z')`;
 
-  // ── Frame alpha — brightens as it opens ───────────────────────
+  // Frame / video opacities
   const frameA = O.dim + O.mid * p;
-
-  // ── Background darken ─────────────────────────────────────────
-  const bgA = O.mid + O.mid * p;
+  const videoO = O.mid + O.mid * p;
+  const bgA    = O.mid + O.mid * p;
 
   return (
     <div style={{ position:"fixed", inset:0, zIndex:500 }}>
 
-      {/* Darkening background */}
-      <div style={{
-        position:"absolute", inset:0,
-        background:`rgba(3,3,10,${bgA})`,
-        transition:"none",
-      }}/>
+      {/* Dark background */}
+      <div style={{ position:"absolute", inset:0, background:`rgba(3,3,10,${bgA})` }}/>
 
-      {/* Ambient glow around arch — grows with door */}
+      {/* Ambient glow around window */}
       <div style={{
         position:"absolute",
         left: doorX - doorW * PHIi4,
@@ -721,120 +723,110 @@ function PrayScene({ W, H, startPos }) {
         height: doorH * (1 + PHIi5 * 2),
         pointerEvents:"none",
         background:`radial-gradient(ellipse at 50% 36%,
-          ${GOLD(O.ghost * p)} 0%, transparent 62%)`,
-        borderRadius:`${doorW}px ${doorW}px 0 0`,
+          ${GOLD(O.ghost * p)} 0%, transparent 65%)`,
+        borderRadius:`${Math.round(doorW * PHIi3)}px ${Math.round(doorW * PHIi3)}px 0 0`,
       }}/>
 
-      {/* ── VIDEO clipped to arch shape ───────────────────────── */}
-      {/* Container matches door rect exactly */}
+      {/* ── VIDEO — clipped to morphing arch shape ────────────── */}
       <div style={{
         position:"absolute",
         left: doorX, top: doorY,
         width: doorW, height: doorH,
-        overflow:"hidden",
         clipPath: archClip,
         WebkitClipPath: archClip,
+        overflow:"hidden",
       }}>
-        {/* Video — centered, scales from small (far) to full (close) */}
-        <div style={{
-          position:"absolute", inset:0,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          overflow:"hidden",
-        }}>
-          <iframe
-            src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=0&rel=0&modestbranding=1&iv_load_policy=3"
-            allow="autoplay; encrypted-media; fullscreen"
-            allowFullScreen
-            style={{
-              border:"none",
-              width:`${Math.round(100 / videoScale)}%`,
-              height:`${Math.round(100 / videoScale)}%`,
-              transform:`scale(${videoScale})`,
-              transformOrigin:"center center",
-              opacity: O.mid + O.mid * p,  // fades in as it rushes forward
-              flexShrink: 0,
-            }}
-          />
-        </div>
+        <iframe
+          src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=0&rel=0&modestbranding=1&iv_load_policy=3"
+          allow="autoplay; encrypted-media; fullscreen"
+          allowFullScreen
+          style={{
+            position:"absolute", inset:0,
+            width:"100%", height:"100%",
+            border:"none",
+            opacity: videoO,
+          }}
+        />
       </div>
 
-      {/* ── DOOR FRAME — no fill, drawn on top of video ───────── */}
-      <svg
-        style={{
-          position:"absolute",
-          left: doorX, top: doorY,
-          width: doorW, height: doorH,
-          overflow:"visible",
-          pointerEvents:"none",
-        }}
-        viewBox={`0 0 ${doorW} ${doorH}`}
-      >
-        {/* Outer arch */}
+      {/* ── DOOR/WINDOW FRAME — no fill, on top of video ─────── */}
+      <svg style={{
+        position:"absolute",
+        left: doorX, top: doorY,
+        width: doorW, height: doorH,
+        overflow:"visible",
+        pointerEvents:"none",
+      }}
+      viewBox={`0 0 ${doorW} ${doorH}`}>
+
+        {/* Outer arch / lintel — flattens as p → 1 */}
         <path
-          d={`M1 ${archH} Q1 1 ${doorW/2} 1 Q${doorW-1} 1 ${doorW-1} ${archH}
-              L${doorW-1} ${doorH} L1 ${doorH} L1 ${archH}Z`}
+          d={archRel}
           fill="none"
           stroke={GOLD(frameA)}
           strokeWidth="1.4"
         />
 
-        {/* Inner panel */}
+        {/* Inner panel — shrinks vertically as window widens */}
         {(()=>{
-          const iaH=archH*PHIi, mt=archH*PHIi2;
+          const iaH = archH * PHIi, mt = archH * PHIi2;
           return <path
             d={`M${m} ${mt+iaH} Q${m} ${mt} ${doorW/2} ${mt}
                 Q${doorW-m} ${mt} ${doorW-m} ${mt+iaH}
                 L${doorW-m} ${doorH*PHIi} L${m} ${doorH*PHIi} L${m} ${mt+iaH}Z`}
             fill="none"
-            stroke={GOLD(O.ghost + O.dim * p)}
+            stroke={GOLD(O.ghost + O.dim * (1-p))}
             strokeWidth=".5"
           />;
         })()}
 
-        {/* Golden ratio divider */}
-        <line x1={m*2} y1={doorH*PHIi} x2={doorW-m*2} y2={doorH*PHIi}
-          stroke={GOLD(O.ghost)} strokeWidth=".4"/>
+        {/* Horizontal divider at PHI ratio of height */}
+        <line
+          x1={m*2} y1={doorH*PHIi}
+          x2={doorW-m*2} y2={doorH*PHIi}
+          stroke={GOLD(O.ghost * (1-p*PHIi))}
+          strokeWidth=".4"
+        />
 
         {/* Corner jewels */}
         {[
           [doorW*PHIi3,     doorH*PHIi],
           [doorW*(1-PHIi3), doorH*PHIi],
-          [doorW*PHIi3,     doorH*.88],
-          [doorW*(1-PHIi3), doorH*.88],
+          [doorW*PHIi3,     doorH*(1-PHIi4)],
+          [doorW*(1-PHIi3), doorH*(1-PHIi4)],
         ].map(([x,y],i) => (
           <circle key={i} cx={x} cy={y} r="1.8"
             fill={GOLD(O.dim + O.mid * p)}/>
         ))}
 
-        {/* Handle */}
-        <circle cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
+        {/* Handle — fades as becomes window */}
+        <circle
+          cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
           r={Math.max(2, Math.round(doorW*PHIi5))}
-          fill="none" stroke={GOLD(O.mid)} strokeWidth=".8"/>
-        <circle cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
+          fill="none"
+          stroke={GOLD((O.mid) * (1 - p*PHIi))}
+          strokeWidth=".8"
+        />
+        <circle
+          cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
           r={Math.max(1, Math.round(doorW*PHIi6))}
-          fill={GOLD(O.mid)}/>
-
-        {/* Keyhole */}
-        <circle cx={doorW/2} cy={doorH*(PHIi+PHIi3)}
-          r={Math.max(2, Math.round(doorW*PHIi6*PHI))}
-          fill="none" stroke={GOLD(O.ghost)} strokeWidth=".5"/>
-        <line
-          x1={doorW/2} y1={doorH*(PHIi+PHIi3)+Math.max(2,doorW*PHIi6*PHI)}
-          x2={doorW/2} y2={doorH*(PHIi+PHIi3)+Math.max(3,doorW*PHIi5)}
-          stroke={GOLD(O.ghost)} strokeWidth=".5"/>
+          fill={GOLD((O.mid) * (1 - p*PHIi))}
+        />
       </svg>
 
-      {/* Ornament — fades out as video takes over */}
-      <div style={{
-        position:"absolute",
-        left: doorX + doorW/2,
-        top:  doorY + archH * PHIi2,
-        transform:"translateX(-50%)",
-        pointerEvents:"none",
-        opacity: O.mid * (1 - p * p),
-      }}>
-        <Ornament size={ornSz} alpha={1}/>
-      </div>
+      {/* Ornament — fades out as arch flattens (no ornament on a window) */}
+      {ornSz > 8 && (
+        <div style={{
+          position:"absolute",
+          left: doorX + doorW/2,
+          top:  doorY + archH * PHIi2,
+          transform:"translateX(-50%)",
+          pointerEvents:"none",
+          opacity: O.mid * (1 - p),
+        }}>
+          <Ornament size={ornSz} alpha={1}/>
+        </div>
+      )}
 
       {/* Edge vignette */}
       <div style={{
