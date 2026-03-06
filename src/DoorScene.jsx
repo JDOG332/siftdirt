@@ -449,7 +449,7 @@ export default function DoorScene({ visible }) {
     const alpha = 0.6 + t * 0.4;
 
     return (
-      <div style={{
+      <div onClick={e => e.stopPropagation()} style={{
         position: "fixed", inset: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
         background: `rgba(3,3,10,${t * 0.85})`,
@@ -469,7 +469,7 @@ export default function DoorScene({ visible }) {
   // Open: full door, waiting for click
   if (doorState === "open") {
     return (
-      <div style={{
+      <div onClick={e => e.stopPropagation()} style={{
         position: "fixed", inset: 0,
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
@@ -521,7 +521,7 @@ export default function DoorScene({ visible }) {
   // Dissolving
   if (doorState === "dissolving") {
     return (
-      <div style={{
+      <div onClick={e => e.stopPropagation()} style={{
         position: "fixed", inset: 0,
         background: "rgba(3,3,10,0.92)",
         zIndex: 100,
@@ -534,7 +534,7 @@ export default function DoorScene({ visible }) {
   // Three doors
   if (doorState === "three") {
     return (
-      <div style={{
+      <div onClick={e => e.stopPropagation()} style={{
         position: "fixed", inset: 0,
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
