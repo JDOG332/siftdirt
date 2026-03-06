@@ -1,154 +1,256 @@
 /**
- * TOUCH TRAIL — mobile equivalent of the infinity cursor
+ * TOUCH BLOOM — Option B
  *
- * On touch:
- *  - A lemniscate (∞) blooms outward from the touch point
- *  - As the finger moves, a golden trail follows it
- *  - On lift, the trail fades and a small burst of motes scatters
+ * Tap-only. No drag tracking. No preventDefault. Scroll is free.
  *
- * Multiple simultaneous touches each get their own trail.
+ * On touchstart:
+ *   → Full lemniscate (∞) erupts from tap point
+ *   → Scale: 0 → full in T×PHIi = 0.382s  (PHI easeOut)
+ *   → Orbiting dot races the curve for T×PHI² = 1.618s total
+ *   → Curve breathes: alpha pulses on PHI rhythm
+ *
+ * On touchend:
+ *   → Curve fractures into gold + blue motes
+ *   → Motes drift upward, fade over T×PHI = 1.000s
+ *   → Each mote follows slight PHI spiral outward
+ *
+ * Multiple simultaneous touches → independent blooms
+ *
+ * OPACITY SYSTEM — PHI ladder only
+ *   O.whisper = PHIi⁵ = 0.090
+ *   O.ghost   = PHIi⁴ = 0.146
+ *   O.dim     = PHIi³ = 0.236
+ *   O.mid     = PHIi² = 0.382
+ *   O.pres    = PHIi  = 0.618
+ *   O.full    = 1.000
+ *
+ * TIMING — PHI clock
+ *   T       = PHIi = 0.618s  (base)
+ *   bloom   = T × PHIi = 0.382s
+ *   life    = T × PHI² = 1.618s
+ *   scatter = T × PHI  = 1.000s
  */
 
 import { useEffect, useRef } from "react";
 
-const PHI = 1.6180339887;
+const PHI   = 1.6180339887;
+const PHIi  = 0.6180339887;
+const PHI2  = 2.6180339887;
+const PHIi2 = 0.3819660113;
+const PHIi3 = 0.2360679775;
+const PHIi4 = 0.1458980338;
+const PHIi5 = 0.0901699437;
 
-// One active touch stream
-class TouchStream {
-  constructor(id, x, y) {
-    this.id = id;
-    this.trail = [{ x, y }];
+const T_BLOOM   = PHIi * PHIi * 1000;   // 0.382s — bloom in
+const T_LIFE    = PHIi * PHI2 * 1000;   // 1.618s — total life
+const T_SCATTER = PHIi * PHI  * 1000;   // 1.000s — scatter fade
+
+const O = {
+  whisper: PHIi5,
+  ghost:   PHIi4,
+  dim:     PHIi3,
+  mid:     PHIi2,
+  pres:    PHIi,
+  full:    1.0,
+};
+
+// Easing
+function eo3(t) { return 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3); }
+function eio(t) { t=Math.max(0,Math.min(1,t)); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2; }
+
+// Gold color with alpha
+const GOLD  = a => [201, 168,  76, a];
+const GOLDB = a => [235, 205, 110, a];
+const BLUE  = a => [120, 185, 245, a];
+
+function rgba([r,g,b,a]) { return `rgba(${r},${g},${b},${a})`; }
+
+// ── Lemniscate of Bernoulli ──────────────────────────────────────
+// x(t) = a·cos(t) / (1 + sin²(t))
+// y(t) = a·sin(t)·cos(t) / (1 + sin²(t))
+function lemPoint(a_size, theta) {
+  const d = 1 + Math.sin(theta) * Math.sin(theta);
+  return [
+    a_size * Math.cos(theta) / d,
+    a_size * Math.sin(theta) * Math.cos(theta) / d,
+  ];
+}
+
+// ── Bloom class ──────────────────────────────────────────────────
+class Bloom {
+  constructor(x, y, screenW) {
+    this.x = x;
+    this.y = y;
+    this.born = performance.now();
+    this.lifted = null;    // time of touchend
+    this.dead = false;
+
+    // Size: PHI-derived from screen width
+    // Mobile: screenW × PHIi³ ≈ 22% of viewport width
+    this.size = screenW * PHIi3;
+
+    // Orbit phase: random start so multiple taps don't sync
+    this.phase = Math.random() * Math.PI * 2;
+
+    // Motes — created on lift
     this.motes = [];
-    this.phase = 0;       // lemniscate phase
-    this.alive = true;
-    this.fadeOut = 0;     // 0→1 when lifted
-  }
-
-  addPoint(x, y) {
-    this.trail.push({ x, y });
-    if (this.trail.length > 80) this.trail.shift();
   }
 
   lift() {
-    this.alive = false;
-    // Scatter motes from last point
-    const last = this.trail[this.trail.length - 1] || { x: 0, y: 0 };
-    this.motes = Array.from({ length: 18 }, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 1.2 + Math.random() * 3.5;
-      return {
-        x: last.x, y: last.y,
+    if (this.lifted) return;
+    this.lifted = performance.now();
+
+    // Fracture into motes — count = PHI-ladder (13 = Fibonacci)
+    const count = 13;
+    for (let i = 0; i < count; i++) {
+      const frac = i / count;
+      // Place motes along the lemniscate curve
+      const theta = frac * Math.PI * 2;
+      const [lx, ly] = lemPoint(this.size, theta);
+
+      // PHI spiral outward velocity
+      const angle  = theta + Math.PI * PHIi; // offset by golden angle
+      const speed  = this.size * PHIi4 * (1 + Math.random() * PHIi);
+      const isGold = Math.random() > O.dim;
+
+      this.motes.push({
+        x: this.x + lx,
+        y: this.y + ly,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 0.5,
-        alpha: 0.7 + Math.random() * 0.3,
-        size: 1 + Math.random() * 2,
-      };
-    });
-  }
-
-  tick() {
-    this.phase += 0.055;
-    if (!this.alive) {
-      this.fadeOut = Math.min(1, this.fadeOut + 0.04);
-      this.motes.forEach(m => {
-        m.x += m.vx; m.y += m.vy;
-        m.vy += 0.06;
-        m.alpha -= 0.035;
+        vy: Math.sin(angle) * speed - speed * PHIi,  // slight upward drift
+        alpha: O.pres + Math.random() * O.dim,
+        size: this.size * PHIi5 * (0.5 + Math.random()),
+        color: isGold ? GOLD : BLUE,
+        decay: O.dim / (T_SCATTER / 16),
       });
-      this.motes = this.motes.filter(m => m.alpha > 0);
     }
   }
 
-  isDead() {
-    return !this.alive && this.fadeOut >= 1 && this.motes.length === 0;
-  }
+  isDead() { return this.dead; }
 
-  draw(ctx) {
-    const trailAlpha = this.alive ? 1 : Math.max(0, 1 - this.fadeOut * 2);
+  draw(ctx, now) {
+    const age = now - this.born;
 
-    // Trail line
-    if (this.trail.length > 1 && trailAlpha > 0) {
-      for (let i = 1; i < this.trail.length; i++) {
-        const frac = i / this.trail.length;
-        const a = frac * frac * 0.7 * trailAlpha;
-        const r = Math.round(180 + frac * 55);
-        const g = Math.round(140 + frac * 65);
-        const b = Math.round(50  + frac * 26);
-        ctx.beginPath();
-        ctx.moveTo(this.trail[i-1].x, this.trail[i-1].y);
-        ctx.lineTo(this.trail[i].x,   this.trail[i].y);
-        ctx.strokeStyle = `rgba(${r},${g},${b},${a})`;
-        ctx.lineWidth = 0.8 + frac * 1.8;
-        ctx.lineCap = "round";
-        ctx.stroke();
+    if (!this.lifted) {
+      // ── ALIVE: draw lemniscate + orbiting dot ──────────────────
+      if (age > T_LIFE) {
+        // Auto-fade after full life if never lifted
+        this.lift();
       }
-    }
 
-    // Lemniscate bloom at current touch point
-    const last = this.trail[this.trail.length - 1];
-    if (last && trailAlpha > 0) {
-      const t = this.phase;
-      const a_size = 16 + Math.sin(t * 0.08) * 3;
+      // Bloom-in scale: 0 → 1 over T_BLOOM
+      const bloomT = eo3(Math.min(1, age / T_BLOOM));
 
-      // Draw full lemniscate loop (parametric, 120 steps)
-      const steps = 120;
+      // Breathing: alpha pulses on PHI rhythm
+      const breathCycle = (age / (T_LIFE * PHIi)) % 1;  // one breath per T_LIFE×PHIi
+      const breathA = O.mid + O.ghost * Math.sin(breathCycle * Math.PI * 2);
+
+      // Orbit phase advances over time
+      this.phase += 0.042;  // slightly faster than desktop version
+
+      const a = this.size * bloomT;
+
+      // ── Draw full lemniscate curve ─────────────────────────────
+      const STEPS = 180;
       ctx.beginPath();
-      for (let i = 0; i <= steps; i++) {
-        const theta = (i / steps) * Math.PI * 2;
-        const denom = 1 + Math.sin(theta) * Math.sin(theta);
-        const lx = a_size * Math.cos(theta) / denom;
-        const ly = a_size * Math.sin(theta) * Math.cos(theta) / denom;
-        const px = last.x + lx;
-        const py = last.y + ly;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+      for (let i = 0; i <= STEPS; i++) {
+        const theta = (i / STEPS) * Math.PI * 2;
+        const [lx, ly] = lemPoint(a, theta);
+        const px = this.x + lx, py = this.y + ly;
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
       }
       ctx.closePath();
-      ctx.strokeStyle = `rgba(201,168,76,${0.22 * trailAlpha})`;
-      ctx.lineWidth = 0.7;
+      ctx.strokeStyle = rgba(GOLD(breathA * bloomT));
+      ctx.lineWidth = 0.8;
       ctx.stroke();
 
-      // Moving dot on the lemniscate
-      const denom2 = 1 + Math.sin(t) * Math.sin(t);
-      const dotX = last.x + a_size * Math.cos(t) / denom2;
-      const dotY = last.y + a_size * Math.sin(t) * Math.cos(t) / denom2;
-      const grd = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 5);
-      grd.addColorStop(0, `rgba(235,205,110,${0.85 * trailAlpha})`);
-      grd.addColorStop(1, "rgba(201,168,76,0)");
+      // ── Outer ring at full lemniscate extent ───────────────────
       ctx.beginPath();
-      ctx.arc(dotX, dotY, 5, 0, Math.PI * 2);
+      ctx.arc(this.x, this.y, a * PHIi, 0, Math.PI * 2);
+      ctx.strokeStyle = rgba(GOLD(O.ghost * bloomT));
+      ctx.lineWidth = 0.4;
+      ctx.stroke();
+
+      // ── Orbiting dot ───────────────────────────────────────────
+      const [dotX, dotY] = lemPoint(a, this.phase);
+      const dx = this.x + dotX, dy = this.y + dotY;
+
+      // Gold glow around dot
+      const grd = ctx.createRadialGradient(dx, dy, 0, dx, dy, a * PHIi3);
+      grd.addColorStop(0, rgba(GOLDB(O.pres * bloomT)));
+      grd.addColorStop(PHIi, rgba(GOLD(O.mid * bloomT)));
+      grd.addColorStop(1, rgba(GOLD(0)));
+      ctx.beginPath();
+      ctx.arc(dx, dy, a * PHIi3, 0, Math.PI * 2);
       ctx.fillStyle = grd;
       ctx.fill();
 
-      // Center glow at finger position
-      const cGrd = ctx.createRadialGradient(last.x, last.y, 0, last.x, last.y, 10);
-      cGrd.addColorStop(0, `rgba(235,205,110,${0.35 * trailAlpha})`);
-      cGrd.addColorStop(1, "rgba(201,168,76,0)");
+      // Bright dot center
       ctx.beginPath();
-      ctx.arc(last.x, last.y, 10, 0, Math.PI * 2);
+      ctx.arc(dx, dy, a * PHIi5, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(GOLDB(O.full * bloomT));
+      ctx.fill();
+
+      // ── Center tap indicator ───────────────────────────────────
+      const cGrd = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, a * PHIi4 * PHI);
+      cGrd.addColorStop(0, rgba(GOLDB(O.mid * bloomT)));
+      cGrd.addColorStop(1, rgba(GOLD(0)));
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, a * PHIi4 * PHI, 0, Math.PI * 2);
       ctx.fillStyle = cGrd;
       ctx.fill();
-    }
 
-    // Scatter motes on lift
-    this.motes.forEach(m => {
-      ctx.beginPath();
-      ctx.arc(m.x, m.y, m.size * m.alpha, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(201,168,76,${m.alpha})`;
-      ctx.fill();
-    });
+    } else {
+      // ── SCATTERED: draw motes ─────────────────────────────────
+      const scatterAge = now - this.lifted;
+      const scatterT = scatterAge / T_SCATTER;
+
+      let anyAlive = false;
+      this.motes.forEach(m => {
+        if (m.alpha <= 0) return;
+        anyAlive = true;
+
+        // PHI gravity: slight pull downward, PHIi upward initial
+        m.x += m.vx;
+        m.y += m.vy;
+        m.vy += PHIi5 * 0.8;     // gentle gravity
+        m.vx *= 0.98;
+        m.alpha -= m.decay;
+
+        const a = Math.max(0, m.alpha);
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, Math.max(0.5, m.size * (a / O.pres)), 0, Math.PI * 2);
+        ctx.fillStyle = rgba(m.color(a));
+        ctx.fill();
+
+        // Tiny glow on each mote
+        if (a > O.ghost) {
+          const mg = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.size * 2);
+          mg.addColorStop(0, rgba(m.color(a * PHIi2)));
+          mg.addColorStop(1, rgba(m.color(0)));
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.size * 2, 0, Math.PI * 2);
+          ctx.fillStyle = mg;
+          ctx.fill();
+        }
+      });
+
+      if (!anyAlive && scatterT > 1) {
+        this.dead = true;
+      }
+    }
   }
 }
 
+// ── Main component ───────────────────────────────────────────────
 export default function TouchTrail() {
   const canvasRef = useRef(null);
   const rafRef    = useRef(null);
-  const streams   = useRef(new Map()); // touchId → TouchStream
+  const blooms    = useRef(new Map());  // touchId → Bloom
 
   useEffect(() => {
     // Only on touch devices
-    const isTouch = navigator.maxTouchPoints > 0;
-    if (!isTouch) return;
+    if (navigator.maxTouchPoints === 0) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -161,56 +263,50 @@ export default function TouchTrail() {
     resize();
     window.addEventListener("resize", resize);
 
-    function onTouchStart(e) {
+    // touchstart → create bloom
+    function onStart(e) {
+      const W = window.innerWidth;
       Array.from(e.changedTouches).forEach(touch => {
-        streams.current.set(
+        blooms.current.set(
           touch.identifier,
-          new TouchStream(touch.identifier, touch.clientX, touch.clientY)
+          new Bloom(touch.clientX, touch.clientY, W)
         );
       });
     }
 
-    function onTouchMove(e) {
-      e.preventDefault();
+    // touchend / touchcancel → lift bloom → scatter
+    function onEnd(e) {
       Array.from(e.changedTouches).forEach(touch => {
-        const s = streams.current.get(touch.identifier);
-        if (s) s.addPoint(touch.clientX, touch.clientY);
+        const b = blooms.current.get(touch.identifier);
+        if (b) b.lift();
       });
     }
 
-    function onTouchEnd(e) {
-      Array.from(e.changedTouches).forEach(touch => {
-        const s = streams.current.get(touch.identifier);
-        if (s) s.lift();
-      });
-    }
+    // NO touchmove handler → browser handles scroll freely
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchend",   onEnd,   { passive: true });
+    window.addEventListener("touchcancel",onEnd,   { passive: true });
 
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove",  onTouchMove,  { passive: false });
-    window.addEventListener("touchend",   onTouchEnd,   { passive: true });
-    window.addEventListener("touchcancel",onTouchEnd,   { passive: true });
-
+    // Render loop
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const now = performance.now();
 
-      streams.current.forEach((stream, id) => {
-        stream.tick();
-        stream.draw(ctx);
-        if (stream.isDead()) streams.current.delete(id);
+      blooms.current.forEach((bloom, id) => {
+        bloom.draw(ctx, now);
+        if (bloom.isDead()) blooms.current.delete(id);
       });
 
       rafRef.current = requestAnimationFrame(loop);
     }
-
     rafRef.current = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", resize);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove",  onTouchMove);
-      window.removeEventListener("touchend",   onTouchEnd);
-      window.removeEventListener("touchcancel",onTouchEnd);
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchend",   onEnd);
+      window.removeEventListener("touchcancel",onEnd);
     };
   }, []);
 
