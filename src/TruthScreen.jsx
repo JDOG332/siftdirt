@@ -632,209 +632,256 @@ function SmallDoor({ w, h, isCenter, onClick }) {
 
 
 // ─────────────────────────────────────────────────────────────────
-// PRAY SCENE — video fills screen after door zooms in and dissolves
+// PRAY SCENE
+//
+// The door was a window all along.
+//
+// PHASES:
+//   zoom     (1.000s) — door scales up from three-doors size to full
+//   reveal   (1.618s) — door FILL fades to transparent, video shows through
+//   window   (∞)      — video plays through arch, frame stays on top
+//
+// LAYERING:
+//   [z:1] YouTube iframe — full screen, behind everything
+//   [z:2] SVG mask — full-screen dark with arch hole cut out (evenodd)
+//   [z:3] Door frame SVG — borders, ornament, handle (no fill)
+//   [z:4] Edge vignette
 // ─────────────────────────────────────────────────────────────────
 function PrayScene({ W, H }) {
-  const [phase, setPhase] = useState("zoom");   // zoom | hold | dissolve | video
-  const [progress, setProgress] = useState(0);
-  const [dissolveActive, setDissolveActive] = useState(false);
-  const rafRef = useRef(null);
+  const [elapsed, setElapsed] = useState(0);
+  const rafRef   = useRef(null);
   const startRef = useRef(null);
 
-  // PHI timing
-  const T_ZOOM     = PHIi * PHI  * 1000;   // 1.000s — door zooms in
-  const T_HOLD     = PHIi * PHIi * 1000;   // 0.382s — hold + breathe
-  const T_DISSOLVE = PHIi * PHI  * 1000;   // 1.000s — particles scatter
+  // PHI timing (ms)
+  const T_ZOOM   = PHIi * PHI  * 1000;   // 1.000s zoom in
+  const T_REVEAL = PHIi * PHI2 * 1000;   // 1.618s fill fades after zoom
 
   useEffect(() => {
-    if (phase !== "zoom" && phase !== "hold") return;
     function loop(now) {
       if (!startRef.current) startRef.current = now;
-      const elapsed = now - startRef.current;
-      if (phase === "zoom") {
-        const t = Math.min(1, elapsed / T_ZOOM);
-        setProgress(t);
-        if (t >= 1) {
-          setPhase("hold");
-          startRef.current = null;
-        }
-      } else if (phase === "hold") {
-        const t = Math.min(1, elapsed / T_HOLD);
-        setProgress(t);
-        if (t >= 1) {
-          setPhase("dissolve");
-          setDissolveActive(true);
-          setTimeout(() => {
-            setDissolveActive(false);
-            setPhase("video");
-          }, T_DISSOLVE);
-        }
-      }
-      if (phase === "zoom" || phase === "hold") {
-        rafRef.current = requestAnimationFrame(loop);
-      }
+      setElapsed(now - startRef.current);
+      rafRef.current = requestAnimationFrame(loop);
     }
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [phase]);
+  }, []);
 
-  // Full-screen door dimensions
-  const doorW = Math.min(W * PHIi, 440);
-  const doorH = Math.round(doorW * PHI2);
+  // Door dimensions — match the center door from ThreeDoors
+  // Uses same PHI derivation so zoom starts from identical size
+  const isMobile = W < 640;
+  let sideW, centerW;
+  if (isMobile) {
+    centerW = Math.min(W * PHIi2, 170); sideW = Math.round(centerW * PHIi);
+  } else {
+    const usable = Math.min(W * .85, 820);
+    sideW = Math.round(usable / (2 + PHI + 2*PHIi));
+    centerW = Math.round(sideW * PHI);
+  }
+  const startW = centerW;
+  const startH = Math.round(centerW * PHI2);
+
+  // Full window size — fills most of the viewport, golden rect
+  const fullW = isMobile
+    ? Math.round(W * PHIi)           // 62% of viewport width
+    : Math.round(Math.min(W * PHIi2, H * PHIi3));
+  const fullH = Math.round(fullW * PHI2);
+
+  // Center position
+  const cx = W / 2;
+  const cy = H * PHIi2;   // slightly above center — golden vertical position
+
+  // ── Zoom progress ─────────────────────────────────────────────
+  const zoomRaw = Math.min(1, elapsed / T_ZOOM);
+  const zoomT   = eio(zoomRaw);
+
+  // Current door size — interpolates from start to full
+  const doorW = Math.round(startW + (fullW - startW) * zoomT);
+  const doorH = Math.round(startH + (fullH - startH) * zoomT);
+
+  // ── Reveal progress (fill fades after zoom) ───────────────────
+  const revealStart = T_ZOOM;
+  const revealRaw   = Math.max(0, Math.min(1, (elapsed - revealStart) / T_REVEAL));
+  const revealT     = eo(revealRaw);  // 0 = door opaque, 1 = door transparent
+
+  // Door fill alpha — 1 → 0 as reveal progresses
+  const fillAlpha = 1 - revealT;
+
+  // Frame alpha — stays bright (O.dim → O.mid as it reveals)
+  const frameAlpha = O.dim + O.mid * revealT;
+
+  // Mask alpha — dark areas: 0.97 → 0.88 (slight softening as video revealed)
+  const maskAlpha = O.pres + O.dim * (1 - revealT * O.mid);
+
   const archH = Math.round(doorW * PHIi);
   const ornSz = Math.round(archH * PHIi * .88);
   const m     = Math.round(doorW * PHIi3);
 
-  // Zoom: scale from 0.38 to 1.0 (starts at PHIi² size, grows to full)
-  const zoomT  = phase === "zoom" ? eio(progress) : 1;
-  const holdT  = phase === "hold" ? progress : phase === "dissolve" || phase === "video" ? 1 : 0;
+  // Door top-left for SVG mask placement
+  const dx = cx - doorW / 2;
+  const dy = cy - doorH / 2;
 
-  // Breathe on hold
-  const breathAlpha = phase === "hold"
-    ? O.dim + O.ghost * Math.sin(holdT * Math.PI * 2)
-    : O.dim;
+  // Arch path string (absolute, for mask SVG)
+  const archPath = `M${dx} ${dy + archH} Q${dx} ${dy} ${cx} ${dy} Q${dx+doorW} ${dy} ${dx+doorW} ${dy+archH} L${dx+doorW} ${dy+doorH} L${dx} ${dy+doorH} L${dx} ${dy+archH}Z`;
 
-  if (phase === "dissolve") {
-    return (
-      <div style={{ position:"fixed", inset:0, background:"rgba(3,3,10,.95)", zIndex:500 }}>
-        <Dissolve W={W} H={H} active={dissolveActive} />
-      </div>
-    );
-  }
-
-  if (phase === "video") {
-    return (
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 500,
-        background: "#000",
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        {/* Gold vignette border */}
-        <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2,
-          boxShadow: `inset 0 0 ${Math.round(W * PHIi3)}px ${Math.round(W * PHIi4)}px rgba(0,0,0,${O.pres})`,
-        }}/>
-        {/* Thin gold frame */}
-        <div style={{
-          position: "absolute",
-          inset: Math.round(W * PHIi5),
-          border: `1px solid ${GOLD(O.dim)}`,
-          pointerEvents: "none", zIndex: 2,
-          borderRadius: 2,
-        }}/>
-        {/* YouTube embed — fills screen */}
-        <iframe
-          src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=1&rel=0&modestbranding=1&iv_load_policy=3"
-          allow="autoplay; encrypted-media; fullscreen"
-          allowFullScreen
-          style={{
-            position: "absolute", inset: 0,
-            width: "100%", height: "100%",
-            border: "none",
-            zIndex: 1,
-          }}
-        />
-      </div>
-    );
-  }
-
-  // ── ZOOM / HOLD — door scales up ─────────────────────────────
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 500,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      background: `rgba(3,3,10,${O.pres + O.mid * zoomT})`,
-    }}>
-      {/* Ambient glow grows with zoom */}
-      <div style={{
-        position: "absolute", inset: 0, pointerEvents: "none",
-        background: `radial-gradient(ellipse at 50% 46%,
-          ${GOLD(O.ghost * zoomT)} 0%, transparent 58%)`,
-      }}/>
+    <div style={{ position:"fixed", inset:0, zIndex:500 }}>
 
-      {/* Door — scales from PHIi² to 1 */}
-      <div style={{
-        transform: `scale(${PHIi2 + (1 - PHIi2) * zoomT})`,
-        transformOrigin: "center center",
-        transition: "none",
-        position: "relative",
-        width: doorW, height: doorH,
-        flexShrink: 0,
-      }}>
-        {/* Glow behind */}
-        <div style={{
-          position: "absolute", inset: -Math.round(doorW * PHIi4), pointerEvents: "none",
-          background: `radial-gradient(ellipse at 50% 38%,
-            ${GOLD(O.dim * zoomT + breathAlpha * holdT)} 0%, transparent 65%)`,
-          borderRadius: `${doorW}px ${doorW}px 0 0`,
-        }}/>
+      {/* ── [z:1] VIDEO — full screen behind everything ─────── */}
+      <iframe
+        src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=0&rel=0&modestbranding=1&iv_load_policy=3&mute=0"
+        allow="autoplay; encrypted-media; fullscreen"
+        allowFullScreen
+        style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%",
+          border: "none",
+          zIndex: 1,
+          opacity: revealT,   // fades in as door fill fades out
+          transition: "none",
+        }}
+      />
 
-        <svg width={doorW} height={doorH} viewBox={`0 0 ${doorW} ${doorH}`}
-          style={{ position:"absolute", inset:0, display:"block" }}>
-          <defs>
-            <linearGradient id="pdg" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="rgba(10,12,34,.99)"/>
-              <stop offset="100%" stopColor="rgba(3,4,14,.99)"/>
-            </linearGradient>
-          </defs>
-          <path d={`M0 ${archH} Q0 0 ${doorW/2} 0 Q${doorW} 0 ${doorW} ${archH}
-                    L${doorW} ${doorH} L0 ${doorH} L0 ${archH}Z`}
-            fill="url(#pdg)"/>
-          <path d={`M1.5 ${archH} Q1.5 1.5 ${doorW/2} 1.5
-                    Q${doorW-1.5} 1.5 ${doorW-1.5} ${archH}
-                    L${doorW-1.5} ${doorH} L1.5 ${doorH} L1.5 ${archH}Z`}
-            fill="none" stroke={GOLD(O.dim + O.ghost * holdT)} strokeWidth="1.4"/>
-          {(()=>{
-            const iaH=archH*PHIi, mt=archH*PHIi2;
-            return <path d={`M${m} ${mt+iaH} Q${m} ${mt} ${doorW/2} ${mt}
-                              Q${doorW-m} ${mt} ${doorW-m} ${mt+iaH}
-                              L${doorW-m} ${doorH*PHIi} L${m} ${doorH*PHIi} L${m} ${mt+iaH}Z`}
-              fill="none" stroke={GOLD(O.ghost)} strokeWidth=".5"/>;
-          })()}
-          {[[doorW*PHIi3,doorH*PHIi],[doorW*(1-PHIi3),doorH*PHIi],
-            [doorW*PHIi3,doorH*.88],[doorW*(1-PHIi3),doorH*.88]]
-            .map(([x,y],i)=><circle key={i} cx={x} cy={y} r="2.2" fill={GOLD(O.dim)}/>)}
-          <line x1={m*2} y1={doorH*PHIi} x2={doorW-m*2} y2={doorH*PHIi}
-            stroke={GOLD(O.ghost)} strokeWidth=".5"/>
-          <circle cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
-            r={Math.round(doorW*PHIi5)}
-            fill="none" stroke={GOLD(O.mid)} strokeWidth=".8"/>
-          <circle cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
-            r={Math.round(doorW*PHIi6)}
-            fill={GOLD(O.mid)}/>
-          <circle cx={doorW/2} cy={doorH*(PHIi+PHIi3)}
-            r={Math.round(doorW*PHIi6*PHI)}
-            fill="none" stroke={GOLD(O.ghost)} strokeWidth=".6"/>
-        </svg>
+      {/* ── [z:2] MASK — dark screen with arch hole ─────────── */}
+      {/* evenodd fill-rule punches the arch shape as a transparent hole */}
+      <svg
+        style={{ position:"absolute", inset:0, width:"100%", height:"100%", zIndex:2, pointerEvents:"none" }}
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+      >
+        {/* Background rectangle + arch hole = dark everywhere except arch */}
+        <path
+          fillRule="evenodd"
+          fill={`rgba(3,3,10,${maskAlpha})`}
+          d={`M0 0 L${W} 0 L${W} ${H} L0 ${H} Z ${archPath}`}
+        />
 
-        {/* Ornament */}
-        <div style={{
-          position:"absolute", top: Math.round(archH*PHIi2),
-          left:"50%", transform:"translateX(-50%)", pointerEvents:"none",
-        }}>
-          <Ornament size={ornSz} alpha={O.mid + O.ghost * zoomT}/>
-        </div>
+        {/* Door FILL — fades out to reveal video through arch */}
+        {fillAlpha > 0.005 && (
+          <path
+            d={archPath}
+            fill={`rgba(6,7,20,${fillAlpha})`}
+          />
+        )}
+      </svg>
 
-        {/* PRAY label inside door */}
-        <div style={{
+      {/* ── [z:3] DOOR FRAME — no fill, frame only ──────────── */}
+      <svg
+        style={{
           position: "absolute",
-          top: "50%", left: 0, right: 0,
-          textAlign: "center",
-          transform: "translateY(-50%)",
+          left: dx, top: dy,
+          width: doorW, height: doorH,
+          overflow: "visible",
+          zIndex: 3,
           pointerEvents: "none",
-          fontFamily: CINZEL,
-          fontSize: `${Math.round(doorW * PHIi5 * PHI)}px`,
-          letterSpacing: "0.5em",
-          color: GOLD(O.mid * zoomT),
-          textShadow: `0 0 ${Math.round(doorW*PHIi3)}px ${GOLD(O.dim * zoomT)}`,
-        }}>PRAY</div>
+        }}
+        viewBox={`0 0 ${doorW} ${doorH}`}
+      >
+        {/* Outer arch frame */}
+        <path
+          d={`M1 ${archH} Q1 1 ${doorW/2} 1 Q${doorW-1} 1 ${doorW-1} ${archH}
+              L${doorW-1} ${doorH} L1 ${doorH} L1 ${archH}Z`}
+          fill="none"
+          stroke={GOLD(frameAlpha)}
+          strokeWidth="1.4"
+        />
+
+        {/* Inner panel */}
+        {(()=>{
+          const iaH = archH * PHIi, mt = archH * PHIi2;
+          return (
+            <path
+              d={`M${m} ${mt+iaH} Q${m} ${mt} ${doorW/2} ${mt}
+                  Q${doorW-m} ${mt} ${doorW-m} ${mt+iaH}
+                  L${doorW-m} ${doorH*PHIi} L${m} ${doorH*PHIi} L${m} ${mt+iaH}Z`}
+              fill="none"
+              stroke={GOLD(O.ghost + O.dim * revealT)}
+              strokeWidth=".5"
+            />
+          );
+        })()}
+
+        {/* Golden ratio divider */}
+        <line
+          x1={m*2} y1={doorH*PHIi}
+          x2={doorW-m*2} y2={doorH*PHIi}
+          stroke={GOLD(O.ghost + O.dim * revealT)}
+          strokeWidth=".5"
+        />
+
+        {/* Corner jewels */}
+        {[
+          [doorW*PHIi3,       doorH*PHIi],
+          [doorW*(1-PHIi3),   doorH*PHIi],
+          [doorW*PHIi3,       doorH*.88],
+          [doorW*(1-PHIi3),   doorH*.88],
+        ].map(([x,y],i) => (
+          <circle key={i} cx={x} cy={y} r="2"
+            fill={GOLD(O.dim + O.mid * revealT)}/>
+        ))}
+
+        {/* Handle */}
+        <circle
+          cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
+          r={Math.round(doorW*PHIi5)}
+          fill="none"
+          stroke={GOLD(O.mid + O.ghost * revealT)}
+          strokeWidth=".8"
+        />
+        <circle
+          cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
+          r={Math.round(doorW*PHIi6)}
+          fill={GOLD(O.mid + O.ghost * revealT)}
+        />
+
+        {/* Keyhole */}
+        <circle
+          cx={doorW/2} cy={doorH*(PHIi+PHIi3)}
+          r={Math.round(doorW*PHIi6*PHI)}
+          fill="none"
+          stroke={GOLD(O.ghost + O.dim * revealT)}
+          strokeWidth=".6"
+        />
+        <line
+          x1={doorW/2} y1={doorH*(PHIi+PHIi3)+doorW*PHIi6*PHI}
+          x2={doorW/2} y2={doorH*(PHIi+PHIi3)+doorW*PHIi5}
+          stroke={GOLD(O.ghost + O.dim * revealT)}
+          strokeWidth=".6"
+        />
+      </svg>
+
+      {/* Ornament — fades out as video reveals (was always decorating glass) */}
+      <div style={{
+        position: "absolute",
+        left: dx + doorW/2,
+        top:  dy + archH * PHIi2,
+        transform: "translateX(-50%)",
+        pointerEvents: "none",
+        zIndex: 3,
+        opacity: O.mid + O.ghost * zoomT - O.mid * revealT,
+      }}>
+        <Ornament size={ornSz} alpha={1}/>
       </div>
 
-      {/* Vignette */}
+      {/* ── [z:4] EDGE VIGNETTE — frames the whole composition ─ */}
       <div style={{
-        position:"absolute", inset:0, pointerEvents:"none",
-        background:"radial-gradient(ellipse at center,transparent 32%,rgba(0,0,0,.45) 68%,rgba(0,0,0,.88) 100%)",
+        position: "absolute", inset: 0, pointerEvents: "none", zIndex: 4,
+        boxShadow: `inset 0 0 ${Math.round(W*PHIi3)}px ${Math.round(W*PHIi4)}px rgba(0,0,0,${O.pres})`,
       }}/>
+
+      {/* Ambient gold glow around arch — fades as video takes over */}
+      <div style={{
+        position: "absolute",
+        left: dx - doorW * PHIi3,
+        top:  dy - doorH * PHIi4,
+        width: doorW * (1 + PHIi3 * 2),
+        height: doorH * (1 + PHIi4 * 2),
+        pointerEvents: "none",
+        zIndex: 2,
+        background: `radial-gradient(ellipse at 50% 38%,
+          ${GOLD(O.ghost * (1 - revealT * PHIi))} 0%, transparent 65%)`,
+        borderRadius: `${doorW}px ${doorW}px 0 0`,
+      }}/>
+
     </div>
   );
 }
