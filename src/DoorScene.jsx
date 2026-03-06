@@ -140,13 +140,13 @@ function ArchDoor({
 
         {/* Door fill */}
         <path
-          d={`M 0 ${archH} Q 0 0 ${width/2} 0 Q ${width} 0 ${width} ${archH} L ${width} ${height} L 0 ${height} Z`}
+          d={`M 0 ${archH} Q 0 0 ${width/2} 0 Q ${width} 0 ${width} ${archH} L ${width} ${height} L 0 ${height} L 0 ${archH} Z`}
           fill={`url(#doorGrad-${label})`}
         />
 
         {/* Outer border */}
         <path
-          d={`M 2 ${archH} Q 2 2 ${width/2} 2 Q ${width-2} 2 ${width-2} ${archH} L ${width-2} ${height} L 2 ${height}`}
+          d={`M 2 ${archH} Q 2 2 ${width/2} 2 Q ${width-2} 2 ${width-2} ${archH} L ${width-2} ${height} L 2 ${height} L 2 ${archH}`}
           fill="none"
           stroke={gold(0.35 + hA * 0.25)}
           strokeWidth="1"
@@ -159,7 +159,7 @@ function ArchDoor({
           const iaH = archH * 0.55;
           return (
             <path
-              d={`M ${m} ${mt + iaH} Q ${m} ${mt} ${width/2} ${mt} Q ${width-m} ${mt} ${width-m} ${mt+iaH} L ${width-m} ${height*0.88} L ${m} ${height*0.88} Z`}
+              d={`M ${m} ${mt + iaH} Q ${m} ${mt} ${width/2} ${mt} Q ${width-m} ${mt} ${width-m} ${mt+iaH} L ${width-m} ${height*0.88} L ${m} ${height*0.88} L ${m} ${mt+iaH} Z`}
               fill="none"
               stroke={gold(0.18 + hA*0.15)}
               strokeWidth="0.5"
