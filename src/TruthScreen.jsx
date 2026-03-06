@@ -919,13 +919,18 @@ function ThreeDoors({ t, W, H }) {
   };
 
   // Door sizing — PHI-derived
+  // Desktop: cap centerH to H×PHIi so everything fits above the fold
+  // derive centerW from capped height: centerW = centerH / PHI²
   let sideW, centerW;
   if (isMobile) {
     centerW = Math.min(Math.round(W * PHIi), 280);
     sideW   = Math.round(centerW * 0.75);   // 3/4 of center
   } else {
-    const usable = Math.min(W * .85, 820);
-    centerW = Math.round(usable / (1 + 2 * 0.75));  // 2 sides at 3/4 + center
+    const centerH_max = Math.round(H * PHIi);       // H×PHIi = max door height
+    const centerW_h   = Math.round(centerH_max / PHI2);  // width from height cap
+    const usable      = Math.min(W * .85, 820);
+    const centerW_w   = Math.round(usable / (1 + 2 * 0.75));  // width from screen width
+    centerW = Math.min(centerW_h, centerW_w);        // use whichever is smaller
     sideW   = Math.round(centerW * 0.75);
   }
   const sideH   = Math.round(sideW   * PHI2);
