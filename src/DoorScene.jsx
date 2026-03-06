@@ -1,595 +1,424 @@
 /**
- * DOOR SCENE
+ * DOOR SCENE — golden ratio throughout
+ * PHI = 1.618  |  All sizes, gaps, fonts derived from PHI ladder
  *
- * States:
- *  "button"    — "FIND YOUR TRUTH" button sitting at bottom
- *  "expanding" — button morphs into full-screen arch door
- *  "open"      — door holds, breathing, waiting
- *  "dissolving"— door shatters into particles on click
- *  "three"     — 3 smaller doors rise: POETRY · PAPER · PROOF
+ * States: idle → expanding → open → dissolving → three
+ * POEMS always center. PAPER & PROOF 50/50 random sides each load.
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { PHI, PHI_INV } from "./data.js";
+
+const PHI   = 1.6180339887;
+const PHIi  = 0.6180339887;   // 1/PHI
+const PHIi2 = 0.3819660113;   // 1/PHI²
 
 const CINZEL = "'Cinzel', serif";
 const CORRO  = "'Cormorant Garamond', Georgia, serif";
+const GOLD   = a => `rgba(201,168,76,${a})`;
+const GOLDB  = a => `rgba(235,205,110,${a})`;
+const SILVER = a => `rgba(210,210,225,${a})`;
 
-function easeOut(t) { return 1 - Math.pow(1 - Math.max(0, Math.min(1, t)), 3); }
-function easeInOut(t) {
-  t = Math.max(0, Math.min(1, t));
-  return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
-}
+function easeOut(t)   { return 1-Math.pow(1-Math.max(0,Math.min(1,t)),3); }
+function easeInOut(t) { t=Math.max(0,Math.min(1,t)); return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2; }
 
-// ── Sacred geometry SVG ornament for door center ──────────────
-function DoorOrnament({ size = 120, alpha = 1 }) {
-  const r = size / 2;
-  const r2 = r * 0.618;
-  const r3 = r * 0.382;
+// ── 50/50 random sides, computed once per page load ─────────────
+const FLIP = Math.random() < 0.5;
+const DOOR_DEFS = FLIP
+  ? [
+      {label:"PAPER", sublabel:"where we are",     href:"https://educationrevelation.com", delay:0.14},
+      {label:"POEMS", sublabel:"see our truth",     href:"https://educationrevelation.com", delay:0},
+      {label:"PROOF", sublabel:"where we've been",  href:"https://educationrevelation.com", delay:0.14},
+    ]
+  : [
+      {label:"PROOF", sublabel:"where we've been",  href:"https://educationrevelation.com", delay:0.14},
+      {label:"POEMS", sublabel:"see our truth",     href:"https://educationrevelation.com", delay:0},
+      {label:"PAPER", sublabel:"where we are",      href:"https://educationrevelation.com", delay:0.14},
+    ];
 
-  // 6 petal flower of life + center circle + outer ring
-  const petals = Array.from({ length: 6 }, (_, i) => {
-    const a = (i / 6) * Math.PI * 2;
-    return `M ${r + Math.cos(a) * r3} ${r + Math.sin(a) * r3} m -${r3} 0 a ${r3} ${r3} 0 1 0 ${r3*2} 0 a ${r3} ${r3} 0 1 0 -${r3*2} 0`;
+// ── Sacred geometry ornament ────────────────────────────────────
+function Ornament({ size, alpha=1 }) {
+  const r=size/2, r2=r*PHIi, r3=r*PHIi2;
+  const petals = Array.from({length:6},(_,i)=>{
+    const a=(i/6)*Math.PI*2;
+    const cx=r+Math.cos(a)*r3, cy=r+Math.sin(a)*r3;
+    return `M${cx} ${cy} m-${r3} 0 a${r3} ${r3} 0 1 0 ${r3*2} 0 a${r3} ${r3} 0 1 0-${r3*2} 0`;
   });
-
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
-      style={{ opacity: alpha, overflow: "visible" }}>
-      {/* Outer ring */}
-      <circle cx={r} cy={r} r={r*0.92} fill="none"
-        stroke="rgba(201,168,76,0.25)" strokeWidth="0.5" />
-      {/* Petals */}
-      {petals.map((d, i) => (
-        <path key={i} d={d} fill="none"
-          stroke="rgba(201,168,76,0.3)" strokeWidth="0.4" />
-      ))}
-      {/* PHI hexagram */}
-      {[0, Math.PI/3, 2*Math.PI/3, Math.PI, 4*Math.PI/3, 5*Math.PI/3].map((a, i) => (
-        <line key={`h${i}`}
-          x1={r + Math.cos(a) * r2} y1={r + Math.sin(a) * r2}
-          x2={r + Math.cos(a + Math.PI) * r2} y2={r + Math.sin(a + Math.PI) * r2}
-          stroke="rgba(201,168,76,0.18)" strokeWidth="0.4" />
-      ))}
-      {/* Inner + center circles */}
-      <circle cx={r} cy={r} r={r2} fill="none"
-        stroke="rgba(201,168,76,0.22)" strokeWidth="0.5" />
-      <circle cx={r} cy={r} r={r3} fill="none"
-        stroke="rgba(201,168,76,0.32)" strokeWidth="0.4" />
-      <circle cx={r} cy={r} r={4} fill="rgba(201,168,76,0.5)" />
-      {/* 4 compass points */}
-      {[0, Math.PI/2, Math.PI, 3*Math.PI/2].map((a, i) => (
-        <line key={`c${i}`}
-          x1={r + Math.cos(a) * r3} y1={r + Math.sin(a) * r3}
-          x2={r + Math.cos(a) * r*0.88} y2={r + Math.sin(a) * r*0.88}
-          stroke="rgba(201,168,76,0.35)" strokeWidth="0.6" />
+      style={{opacity:alpha,overflow:"visible",display:"block"}}>
+      <circle cx={r} cy={r} r={r*.92} fill="none" stroke={GOLD(.2)} strokeWidth=".5"/>
+      {petals.map((d,i)=><path key={i} d={d} fill="none" stroke={GOLD(.26)} strokeWidth=".4"/>)}
+      {[0,1,2,3,4,5].map(i=>{
+        const a=(i/6)*Math.PI*2;
+        return <line key={i} x1={r+Math.cos(a)*r2} y1={r+Math.sin(a)*r2}
+          x2={r+Math.cos(a+Math.PI)*r2} y2={r+Math.sin(a+Math.PI)*r2}
+          stroke={GOLD(.14)} strokeWidth=".4"/>;
+      })}
+      <circle cx={r} cy={r} r={r2} fill="none" stroke={GOLD(.2)} strokeWidth=".5"/>
+      <circle cx={r} cy={r} r={r3} fill="none" stroke={GOLD(.26)} strokeWidth=".4"/>
+      <circle cx={r} cy={r} r={3.5} fill={GOLD(.55)}/>
+      {[0,Math.PI/2,Math.PI,3*Math.PI/2].map((a,i)=>(
+        <line key={i} x1={r+Math.cos(a)*r3} y1={r+Math.sin(a)*r3}
+          x2={r+Math.cos(a)*r*.88} y2={r+Math.sin(a)*r*.88}
+          stroke={GOLD(.3)} strokeWidth=".6"/>
       ))}
     </svg>
   );
 }
 
-// ── Single arch door ──────────────────────────────────────────
-function ArchDoor({
-  width, height,
-  label, sublabel,
-  alpha = 1, scale = 1,
-  glowAlpha = 0,
-  onClick,
-  href,
-  style = {},
-  ornamentSize,
-  showHandle = true,
-  labelBelow = false,
-}) {
+// ── Arch door ────────────────────────────────────────────────────
+function ArchDoor({ w, h, isCenter, glowAlpha=0, onClick }) {
   const [hover, setHover] = useState(false);
   const hA = hover ? 1 : 0;
-  const gold    = a => `rgba(201,168,76,${a})`;
-  const goldBrt = a => `rgba(235,205,110,${a})`;
-  const navy    = a => `rgba(8,10,28,${a})`;
+  const archH = w * PHIi;   // arch height = w × 0.618 — golden
+  const m     = w * 0.09;
+  const ornSz = w * PHIi * .88;
 
-  const archH = height * 0.22; // how tall the arch is
-  const ornSize = ornamentSize || width * 0.55;
-
-  const doorContent = (
+  return (
     <div
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseEnter={()=>setHover(true)}
+      onMouseLeave={()=>setHover(false)}
       onClick={onClick}
       style={{
-        position: "relative",
-        width, height,
-        cursor: "pointer",
-        transform: `scale(${scale * (hover ? 1.012 : 1)})`,
-        transition: "transform 0.618s cubic-bezier(0.23,1,0.32,1)",
-        opacity: alpha,
-        ...style,
+        position:"relative", width:w, height:h,
+        cursor:"pointer", flexShrink:0,
+        transform:`scale(${hover?1+PHIi2*.04:1})`,
+        transition:`transform ${PHIi}s cubic-bezier(.23,1,.32,1)`,
       }}
     >
-      {/* Outer glow */}
+      {/* Glow */}
       <div style={{
-        position: "absolute",
-        inset: -20,
-        borderRadius: `${width/2}px ${width/2}px 0 0 / ${archH+20}px ${archH+20}px 0 0`,
-        background: `radial-gradient(ellipse at 50% 40%, ${gold(glowAlpha + hA*0.08)} 0%, transparent 70%)`,
-        pointerEvents: "none",
-      }} />
+        position:"absolute", inset:-14, pointerEvents:"none",
+        background:`radial-gradient(ellipse at 50% 40%,
+          ${GOLD(glowAlpha+hA*.08)} 0%, transparent 68%)`,
+        borderRadius:`${w}px ${w}px 0 0`,
+      }}/>
 
-      {/* SVG door frame — arch shape */}
-      <svg
-        width={width} height={height}
-        style={{ position: "absolute", inset: 0 }}
-        viewBox={`0 0 ${width} ${height}`}
-      >
-        {/* Door path — rect bottom + arch top */}
+      <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}
+        style={{position:"absolute",inset:0,display:"block"}}>
         <defs>
-          <clipPath id={`arch-${label}`}>
-            <path d={`
-              M 0 ${archH}
-              Q 0 0 ${width/2} 0
-              Q ${width} 0 ${width} ${archH}
-              L ${width} ${height}
-              L 0 ${height}
-              Z
-            `} />
-          </clipPath>
-          <linearGradient id={`doorGrad-${label}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(12,14,36,0.97)" />
-            <stop offset="100%" stopColor="rgba(4,5,16,0.99)" />
+          <linearGradient id={`dg${isCenter?1:0}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor={isCenter?"rgba(10,12,32,.98)":"rgba(7,9,24,.98)"}/>
+            <stop offset="100%" stopColor="rgba(3,4,14,.99)"/>
           </linearGradient>
         </defs>
 
-        {/* Door fill */}
-        <path
-          d={`M 0 ${archH} Q 0 0 ${width/2} 0 Q ${width} 0 ${width} ${archH} L ${width} ${height} L 0 ${height} L 0 ${archH} Z`}
-          fill={`url(#doorGrad-${label})`}
-        />
+        {/* Fill */}
+        <path d={`M0 ${archH} Q0 0 ${w/2} 0 Q${w} 0 ${w} ${archH}
+                  L${w} ${h} L0 ${h} L0 ${archH}Z`}
+          fill={`url(#dg${isCenter?1:0})`}/>
 
-        {/* Outer border */}
-        <path
-          d={`M 2 ${archH} Q 2 2 ${width/2} 2 Q ${width-2} 2 ${width-2} ${archH} L ${width-2} ${height} L 2 ${height} L 2 ${archH}`}
-          fill="none"
-          stroke={gold(0.35 + hA * 0.25)}
-          strokeWidth="1"
-        />
+        {/* Outer frame */}
+        <path d={`M1.5 ${archH} Q1.5 1.5 ${w/2} 1.5
+                  Q${w-1.5} 1.5 ${w-1.5} ${archH}
+                  L${w-1.5} ${h} L1.5 ${h} L1.5 ${archH}Z`}
+          fill="none" stroke={GOLD(.28+hA*.22)} strokeWidth={isCenter?"1.1":".9"}/>
 
-        {/* Inner border panel */}
-        {(() => {
-          const m = width * 0.1;
-          const mt = archH * 0.7;
-          const iaH = archH * 0.55;
-          return (
-            <path
-              d={`M ${m} ${mt + iaH} Q ${m} ${mt} ${width/2} ${mt} Q ${width-m} ${mt} ${width-m} ${mt+iaH} L ${width-m} ${height*0.88} L ${m} ${height*0.88} L ${m} ${mt+iaH} Z`}
-              fill="none"
-              stroke={gold(0.18 + hA*0.15)}
-              strokeWidth="0.5"
-            />
-          );
+        {/* Inner panel */}
+        {(()=>{
+          const iaH=archH*PHIi, mt=archH*.35;
+          return <path d={`M${m} ${mt+iaH} Q${m} ${mt} ${w/2} ${mt}
+                            Q${w-m} ${mt} ${w-m} ${mt+iaH}
+                            L${w-m} ${h*.87} L${m} ${h*.87} L${m} ${mt+iaH}Z`}
+            fill="none" stroke={GOLD(.13+hA*.13)} strokeWidth=".5"/>;
         })()}
 
-        {/* Corner flourishes */}
-        {[
-          [width*0.08, height*0.78], [width*0.92, height*0.78],
-          [width*0.08, height*0.9],  [width*0.92, height*0.9],
-        ].map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={2}
-            fill={gold(0.3 + hA*0.2)} />
-        ))}
+        {/* Corner dots */}
+        {[[w*PHIi2,h*PHIi],[w*(1-PHIi2),h*PHIi],[w*PHIi2,h*.88],[w*(1-PHIi2),h*.88]]
+          .map(([x,y],i)=><circle key={i} cx={x} cy={y} r="1.8" fill={GOLD(.26+hA*.18)}/>)}
 
-        {/* Door handle */}
-        {showHandle && (
-          <>
-            <circle cx={width*0.7} cy={height*0.52} r={4}
-              fill="none" stroke={gold(0.4 + hA*0.3)} strokeWidth="0.8" />
-            <circle cx={width*0.7} cy={height*0.52} r={1.5}
-              fill={gold(0.5 + hA*0.3)} />
-          </>
-        )}
+        {/* Horizontal divider at PHI of height */}
+        <line x1={w*.1} y1={h*PHIi} x2={w*.9} y2={h*PHIi}
+          stroke={GOLD(.1+hA*.08)} strokeWidth=".4"/>
+
+        {/* Handle */}
+        <circle cx={w*.68} cy={h*.52} r="3.5"
+          fill="none" stroke={GOLD(.33+hA*.28)} strokeWidth=".7"/>
+        <circle cx={w*.68} cy={h*.52} r="1.4" fill={GOLD(.33+hA*.28)}/>
 
         {/* Keyhole */}
-        <circle cx={width*0.5} cy={height*0.7} r={3}
-          fill="none" stroke={gold(0.2 + hA*0.2)} strokeWidth="0.5" />
-        <line
-          x1={width*0.5} y1={height*0.7+3}
-          x2={width*0.5} y2={height*0.7+9}
-          stroke={gold(0.2 + hA*0.2)} strokeWidth="0.5"
-        />
-
-        {/* Horizontal divider bar */}
-        <line
-          x1={width*0.1} y1={height*0.5}
-          x2={width*0.9} y2={height*0.5}
-          stroke={gold(0.12 + hA*0.1)} strokeWidth="0.4"
-        />
+        <circle cx={w*.5} cy={h*.72} r="2.8"
+          fill="none" stroke={GOLD(.16+hA*.18)} strokeWidth=".5"/>
+        <line x1={w*.5} y1={h*.72+2.8} x2={w*.5} y2={h*.72+8}
+          stroke={GOLD(.16+hA*.18)} strokeWidth=".5"/>
       </svg>
 
       {/* Ornament */}
       <div style={{
-        position: "absolute",
-        top: archH * 0.45,
-        left: "50%",
-        transform: "translateX(-50%)",
-        pointerEvents: "none",
+        position:"absolute", top:archH*.38,
+        left:"50%", transform:"translateX(-50%)",
+        pointerEvents:"none",
       }}>
-        <DoorOrnament size={ornSize} alpha={0.6 + hA * 0.3} />
+        <Ornament size={ornSz} alpha={.5+hA*.3}/>
       </div>
-
-      {/* Label inside or below door */}
-      {label && !labelBelow && (
-        <div style={{
-          position: "absolute",
-          bottom: height * 0.14,
-          left: 0, right: 0,
-          textAlign: "center",
-          fontFamily: CINZEL,
-          fontSize: `clamp(8px, ${width * 0.09}px, 18px)`,
-          letterSpacing: "0.35em",
-          color: gold(0.55 + hA * 0.3),
-          textShadow: hover ? `0 0 20px ${gold(0.25)}` : "none",
-          transition: "all 0.4s ease",
-          pointerEvents: "none",
-        }}>
-          {label}
-        </div>
-      )}
     </div>
   );
-
-  // Outer label below (for 3-door layout)
-  if (labelBelow) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-        {doorContent}
-        <div style={{
-          fontFamily: CINZEL,
-          fontSize: "clamp(10px,2.5vw,14px)",
-          letterSpacing: "0.45em",
-          color: gold(0.5 + hA*0.35),
-          textShadow: hover ? `0 0 24px ${gold(0.2)}` : "none",
-          transition: "all 0.618s ease",
-          opacity: alpha,
-        }}>
-          {label}
-        </div>
-        {sublabel && (
-          <div style={{
-            fontFamily: CORRO,
-            fontStyle: "italic",
-            fontSize: "clamp(9px,1.8vw,11px)",
-            letterSpacing: "0.2em",
-            color: gold(0.28 + hA*0.2),
-            opacity: alpha,
-          }}>
-            {sublabel}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return doorContent;
 }
 
-// ── Dissolve particle canvas ───────────────────────────────────
-function DissolveCanvas({ W, H, active }) {
-  const canvasRef = useRef(null);
-  const rafRef    = useRef(null);
-  const startRef  = useRef(null);
-  const particles = useRef([]);
-
-  useEffect(() => {
-    if (!active) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    canvas.width = W; canvas.height = H;
-
-    // Spawn particles from center of screen
-    particles.current = Array.from({ length: 280 }, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 1.5 + Math.random() * 5;
+// ── Dissolve canvas ──────────────────────────────────────────────
+function Dissolve({ W, H, active }) {
+  const canvasRef=useRef(null), rafRef=useRef(null);
+  useEffect(()=>{
+    if(!active) return;
+    const cv=canvasRef.current; if(!cv) return;
+    cv.width=W; cv.height=H;
+    const ctx=cv.getContext("2d");
+    const pts=Array.from({length:300},()=>{
+      const a=Math.random()*Math.PI*2, s=1.8+Math.random()*5;
       return {
-        x: W/2 + (Math.random()-0.5)*W*0.55,
-        y: H/2 + (Math.random()-0.5)*H*0.55,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 1,
-        size: 1 + Math.random() * 3,
-        alpha: 0.6 + Math.random() * 0.4,
-        decay: 0.015 + Math.random() * 0.025,
-        gold: Math.random() > 0.4,
+        x:W/2+(Math.random()-.5)*W*.6, y:H/2+(Math.random()-.5)*H*.6,
+        vx:Math.cos(a)*s, vy:Math.sin(a)*s-1.2,
+        sz:1+Math.random()*3, al:.5+Math.random()*.5,
+        dc:.013+Math.random()*.022, gold:Math.random()>.35,
       };
     });
-
-    function loop(now) {
-      if (!startRef.current) startRef.current = now;
-      const t = (now - startRef.current) / 1200;
-      ctx.clearRect(0, 0, W, H);
-
-      let alive = false;
-      particles.current.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        p.vy += 0.04;
-        p.vx *= 0.99;
-        p.alpha -= p.decay;
-        if (p.alpha > 0) {
-          alive = true;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2);
-          ctx.fillStyle = p.gold
-            ? `rgba(201,168,76,${p.alpha})`
-            : `rgba(140,170,220,${p.alpha * 0.7})`;
+    function loop(){
+      ctx.clearRect(0,0,W,H);
+      let alive=false;
+      pts.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy; p.vy+=.045; p.vx*=.99; p.al-=p.dc;
+        if(p.al>0){
+          alive=true;
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.sz*p.al,0,Math.PI*2);
+          ctx.fillStyle=p.gold?GOLD(p.al):`rgba(140,170,220,${p.al*.7})`;
           ctx.fill();
         }
       });
-
-      if (alive) rafRef.current = requestAnimationFrame(loop);
+      if(alive) rafRef.current=requestAnimationFrame(loop);
     }
-
-    rafRef.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [active, W, H]);
-
-  if (!active) return null;
-  return (
-    <canvas ref={canvasRef}
-      style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:50 }} />
-  );
+    rafRef.current=requestAnimationFrame(loop);
+    return ()=>cancelAnimationFrame(rafRef.current);
+  },[active,W,H]);
+  if(!active) return null;
+  return <canvas ref={canvasRef} style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:50}}/>;
 }
 
-// ── Three doors ────────────────────────────────────────────────
-const THREE_DOORS = [
-  {
-    label: "POETRY",
-    sublabel: "the felt truth",
-    href: "https://educationrevelation.com",
-    delay: 0,
-  },
-  {
-    label: "PAPER",
-    sublabel: "the proven truth",
-    href: "https://educationrevelation.com",
-    delay: 0.12,
-  },
-  {
-    label: "PROOF",
-    sublabel: "the lived truth",
-    href: "https://educationrevelation.com",
-    delay: 0.24,
-  },
-];
-
-// ── Main DoorScene component ───────────────────────────────────
+// ── Main component ───────────────────────────────────────────────
 export default function DoorScene({ visible }) {
-  const [doorState, setDoorState] = useState("idle");
-  // idle → expanding → open → dissolving → three
-  const [expandT, setExpandT] = useState(0);
-  const [dissolveActive, setDissolveActive] = useState(false);
-  const [threeT, setThreeT] = useState(0);
+  const [state,    setState]   = useState("idle");
+  const [expandT,  setExpandT] = useState(0);
+  const [threeT,   setThreeT]  = useState(0);
+  const [dissolve, setDissolve]= useState(false);
   const rafRef = useRef(null);
-  const dims = useRef({ W: window.innerWidth, H: window.innerHeight });
+  const [dims, setDims] = useState({W:window.innerWidth, H:window.innerHeight});
+  const isMobile = dims.W < 640;
 
-  useEffect(() => {
-    const update = () => {
-      dims.current = { W: window.innerWidth, H: window.innerHeight };
-    };
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
+  useEffect(()=>{
+    const fn=()=>setDims({W:window.innerWidth,H:window.innerHeight});
+    window.addEventListener("resize",fn);
+    return ()=>window.removeEventListener("resize",fn);
+  },[]);
 
-  // Expand animation
-  useEffect(() => {
-    if (doorState !== "expanding") return;
-    let start = null;
-    const DURATION = 1200;
-    function loop(now) {
-      if (!start) start = now;
-      const t = Math.min(1, (now - start) / DURATION);
+  // Expand
+  useEffect(()=>{
+    if(state!=="expanding") return;
+    let s=null;
+    const D=1100;
+    function loop(now){
+      if(!s)s=now;
+      const t=Math.min(1,(now-s)/D);
       setExpandT(easeInOut(t));
-      if (t < 1) rafRef.current = requestAnimationFrame(loop);
-      else setDoorState("open");
+      if(t<1) rafRef.current=requestAnimationFrame(loop);
+      else setState("open");
     }
-    rafRef.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [doorState]);
+    rafRef.current=requestAnimationFrame(loop);
+    return ()=>cancelAnimationFrame(rafRef.current);
+  },[state]);
 
-  // Three doors animation
-  useEffect(() => {
-    if (doorState !== "three") return;
-    let start = null;
-    const DURATION = 1400;
-    function loop(now) {
-      if (!start) start = now;
-      const t = Math.min(1, (now - start) / DURATION);
+  // Three
+  useEffect(()=>{
+    if(state!=="three") return;
+    let s=null;
+    const D=1700;
+    function loop(now){
+      if(!s)s=now;
+      const t=Math.min(1,(now-s)/D);
       setThreeT(t);
-      if (t < 1) rafRef.current = requestAnimationFrame(loop);
+      if(t<1) rafRef.current=requestAnimationFrame(loop);
     }
-    rafRef.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [doorState]);
+    rafRef.current=requestAnimationFrame(loop);
+    return ()=>cancelAnimationFrame(rafRef.current);
+  },[state]);
 
-  const handleButtonClick = useCallback(() => {
-    setDoorState("expanding");
-  }, []);
+  const onButton    = useCallback(()=>setState("expanding"),[]);
+  const onMainDoor  = useCallback(()=>{
+    if(state!=="open") return;
+    setState("dissolving"); setDissolve(true);
+    setTimeout(()=>{ setDissolve(false); setState("three"); }, 950);
+  },[state]);
 
-  const handleMainDoorClick = useCallback(() => {
-    if (doorState !== "open") return;
-    setDoorState("dissolving");
-    setDissolveActive(true);
-    setTimeout(() => {
-      setDoorState("three");
-      setDissolveActive(false);
-    }, 1000);
-  }, [doorState]);
+  if(!visible) return null;
 
-  if (!visible) return null;
+  const {W,H} = dims;
 
-  const { W, H } = dims.current;
-  const isMobile = W < 640;
+  // ── Full door dims ─────────────────────────────────────────
+  const fullW = Math.min(W*.62, 440);
+  const fullH = Math.round(fullW*PHI*PHI);
 
-  // Door dimensions at full expansion
-  const fullDoorW = Math.min(W * 0.72, 480);
-  const fullDoorH = Math.min(H * 0.82, 680);
-  // Small door dimensions for 3-door layout
-  const smallDoorW = isMobile ? Math.min(W*0.28, 100) : Math.min(W*0.2, 150);
-  const smallDoorH = smallDoorW * 1.95;
+  // ── Three-door dims (PHI ladder) ───────────────────────────
+  // centerW = sideW × PHI
+  // gap     = sideW × PHIi
+  // 2×sideW + centerW + 2×gap = usable
+  // → sideW = usable / (2 + PHI + 2×PHIi)
+  let sideW, centerW;
+  if(isMobile){
+    centerW = Math.min(W*.5, 170);
+    sideW   = Math.round(centerW*PHIi);
+  } else {
+    const usable = Math.min(W*.85, 800);
+    sideW   = Math.round(usable/(2+PHI+2*PHIi));
+    centerW = Math.round(sideW*PHI);
+  }
+  const sideH   = Math.round(sideW  *PHI*PHI);
+  const centerH = Math.round(centerW*PHI*PHI);
+  const doorGap = isMobile
+    ? Math.round(sideW*PHIi*.45)
+    : Math.round(sideW*PHIi);
 
-  // Button state
-  if (doorState === "idle") {
-    return (
-      <FindYourTruthButton onClick={handleButtonClick} />
-    );
+  // Font sizes — PHI ladder anchored to sideW
+  // Label:   sideW × .078  (clamp 9–14)
+  // Sublabel:sideW × .06   (clamp 7–11)
+  // Heading: viewport-relative
+  const labelFS  = `clamp(9px,${(sideW*.078).toFixed(1)}px,14px)`;
+  const subFS    = `clamp(7px,${(sideW*.062).toFixed(1)}px,11px)`;
+  const headFS   = isMobile ? "clamp(8px,2.8vw,11px)" : "clamp(9px,1vw,12px)";
+  const hintFS   = isMobile ? "clamp(8px,2.4vw,10px)" : "clamp(8px,.85vw,10px)";
+
+  // ── IDLE ───────────────────────────────────────────────────
+  if(state==="idle"){
+    return <TruthButton onClick={onButton}/>;
   }
 
-  // Expanding: morphs from button-sized to full door
-  if (doorState === "expanding") {
-    const t = expandT;
-    // interpolate size
-    const dW = 200 + (fullDoorW - 200) * t;
-    const dH = 52  + (fullDoorH - 52)  * t;
-    const alpha = 0.6 + t * 0.4;
-
-    return (
-      <div onClick={e => e.stopPropagation()} style={{
-        position: "fixed", inset: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: `rgba(3,3,10,${t * 0.85})`,
-        zIndex: 100,
+  // ── EXPANDING ──────────────────────────────────────────────
+  if(state==="expanding"){
+    const t=expandT;
+    return(
+      <div onClick={e=>e.stopPropagation()} style={{
+        position:"fixed",inset:0,zIndex:100,
+        display:"flex",alignItems:"center",justifyContent:"center",
+        background:`rgba(3,3,10,${t*.9})`,
       }}>
-        <ArchDoor
-          width={dW} height={dH}
-          alpha={alpha}
-          glowAlpha={t * 0.15}
-          ornamentSize={dW * 0.45 * t}
-          showHandle={t > 0.6}
-        />
+        <ArchDoor w={200+(fullW-200)*t} h={52+(fullH-52)*t}
+          isCenter glowAlpha={t*.13} onClick={()=>{}}/>
       </div>
     );
   }
 
-  // Open: full door, waiting for click
-  if (doorState === "open") {
-    return (
-      <div onClick={e => e.stopPropagation()} style={{
-        position: "fixed", inset: 0,
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        background: "rgba(3,3,10,0.92)",
-        zIndex: 100,
+  // ── OPEN ───────────────────────────────────────────────────
+  if(state==="open"){
+    return(
+      <div onClick={e=>e.stopPropagation()} style={{
+        position:"fixed",inset:0,zIndex:100,
+        display:"flex",flexDirection:"column",
+        alignItems:"center",justifyContent:"center",
+        gap:Math.round(fullW*PHIi2),
+        background:"rgba(3,3,10,.93)",
       }}>
-        {/* Ambient glow behind door */}
         <div style={{
-          position: "absolute",
-          width: fullDoorW * 1.8, height: fullDoorH * 1.4,
-          borderRadius: "50%",
-          background: "radial-gradient(ellipse at 50% 45%, rgba(201,168,76,0.07) 0%, transparent 65%)",
-          pointerEvents: "none",
-        }} />
-
-        <ArchDoor
-          width={fullDoorW}
-          height={fullDoorH}
-          alpha={1}
-          glowAlpha={0.12}
-          ornamentSize={fullDoorW * 0.52}
-          showHandle={true}
-          onClick={handleMainDoorClick}
-        />
-
-        {/* Hint text */}
+          position:"absolute",inset:0,pointerEvents:"none",
+          background:`radial-gradient(ellipse at 50% 46%,${GOLD(.06)} 0%,transparent 62%)`,
+        }}/>
+        <ArchDoor w={fullW} h={fullH} isCenter glowAlpha={.12} onClick={onMainDoor}/>
         <div style={{
-          marginTop: 28,
-          fontFamily: CORRO,
-          fontStyle: "italic",
-          fontSize: "clamp(10px,1.6vw,13px)",
-          letterSpacing: "0.28em",
-          color: "rgba(201,168,76,0.3)",
-          animation: "breathe 3s ease-in-out infinite",
-        }}>
-          open the door
-        </div>
-
-        <style>{`
-          @keyframes breathe {
-            0%,100% { opacity:0.4; }
-            50% { opacity:0.9; }
-          }
-        `}</style>
+          fontFamily:CORRO, fontStyle:"italic",
+          fontSize:hintFS, letterSpacing:"0.3em",
+          color:GOLD(.32),
+          animation:"breathe 3.2s ease-in-out infinite",
+        }}>open the door</div>
+        <div style={{
+          position:"absolute",inset:0,pointerEvents:"none",
+          background:"radial-gradient(ellipse at center,transparent 32%,rgba(0,0,0,.42) 68%,rgba(0,0,0,.86) 100%)",
+        }}/>
+        <style>{`@keyframes breathe{0%,100%{opacity:.3}50%{opacity:.85}}`}</style>
       </div>
     );
   }
 
-  // Dissolving
-  if (doorState === "dissolving") {
-    return (
-      <div onClick={e => e.stopPropagation()} style={{
-        position: "fixed", inset: 0,
-        background: "rgba(3,3,10,0.92)",
-        zIndex: 100,
+  // ── DISSOLVING ─────────────────────────────────────────────
+  if(state==="dissolving"){
+    return(
+      <div onClick={e=>e.stopPropagation()} style={{
+        position:"fixed",inset:0,zIndex:100,
+        background:"rgba(3,3,10,.93)",
       }}>
-        <DissolveCanvas W={W} H={H} active={dissolveActive} />
+        <Dissolve W={W} H={H} active={dissolve}/>
       </div>
     );
   }
 
-  // Three doors
-  if (doorState === "three") {
-    return (
-      <div onClick={e => e.stopPropagation()} style={{
-        position: "fixed", inset: 0,
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        background: "rgba(3,3,10,0.96)",
-        zIndex: 100,
-        gap: "clamp(20px,4vh,48px)",
+  // ── THREE DOORS ────────────────────────────────────────────
+  if(state==="three"){
+    const headT=easeOut(Math.max(0,(threeT-.08)/.42));
+    return(
+      <div onClick={e=>e.stopPropagation()} style={{
+        position:"fixed",inset:0,zIndex:100,
+        display:"flex",flexDirection:"column",
+        alignItems:"center",justifyContent:"center",
+        background:"rgba(3,3,10,.97)",
+        gap: isMobile
+          ? Math.round(centerW*PHIi2*.8)
+          : Math.round(centerW*PHIi2),
+        padding:`0 clamp(12px,3vw,28px) clamp(16px,3vh,32px)`,
+        boxSizing:"border-box",
       }}>
+
         {/* Ambient */}
         <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: "radial-gradient(ellipse at 50% 50%, rgba(201,168,76,0.04) 0%, transparent 60%)",
-        }} />
+          position:"absolute",inset:0,pointerEvents:"none",
+          background:`radial-gradient(ellipse at 50% 48%,${GOLD(.05)} 0%,transparent 56%)`,
+        }}/>
 
         {/* Heading */}
         <div style={{
-          fontFamily: CINZEL,
-          fontSize: "clamp(10px,2vw,13px)",
-          letterSpacing: "0.55em",
-          color: "rgba(201,168,76,0.35)",
-          opacity: easeOut(Math.max(0, threeT - 0.2) / 0.4),
-          transform: `translateY(${(1-easeOut(Math.max(0,threeT-0.2)/0.4))*12}px)`,
-        }}>
-          CHOOSE YOUR PATH
-        </div>
+          fontFamily:CINZEL, fontSize:headFS,
+          letterSpacing:"0.55em",
+          color:GOLD(.38*headT),
+          opacity:headT,
+          transform:`translateY(${(1-headT)*8}px)`,
+          textAlign:"center", whiteSpace:"nowrap",
+        }}>CHOOSE YOUR PATH</div>
 
-        {/* The 3 doors */}
+        {/* Doors row / column */}
         <div style={{
-          display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: isMobile ? 24 : "clamp(24px,4vw,64px)",
+          display:"flex",
+          flexDirection:isMobile?"column":"row",
+          alignItems:isMobile?"center":"flex-end",
+          justifyContent:"center",
+          gap:doorGap,
         }}>
-          {THREE_DOORS.map((door, i) => {
-            const dt = easeOut(Math.max(0, (threeT - door.delay * 0.6) / 0.55));
-            return (
-              <div
-                key={door.label}
-                style={{
-                  opacity: dt,
-                  transform: `translateY(${(1-dt)*40}px)`,
-                }}
-              >
+          {DOOR_DEFS.map(door=>{
+            const isC = door.label==="POEMS";
+            const dW  = isC ? centerW : sideW;
+            const dH  = isC ? centerH : sideH;
+            const dt  = easeOut(Math.max(0,(threeT-door.delay)/.52));
+            return(
+              <div key={door.label} style={{
+                display:"flex", flexDirection:"column",
+                alignItems:"center",
+                gap:Math.round(dW*PHIi2*.85),
+                opacity:dt,
+                transform:`translateY(${(1-dt)*36}px)`,
+              }}>
                 <ArchDoor
-                  width={smallDoorW}
-                  height={smallDoorH}
-                  label={door.label}
-                  sublabel={door.sublabel}
-                  labelBelow={true}
-                  alpha={1}
-                  glowAlpha={0.06}
-                  ornamentSize={smallDoorW * 0.5}
-                  showHandle={true}
-                  onClick={() => window.open(door.href, "_blank")}
+                  w={dW} h={dH}
+                  isCenter={isC}
+                  glowAlpha={isC?.1:.05}
+                  onClick={()=>window.open(door.href,"_blank")}
                 />
+                <div style={{
+                  fontFamily:CINZEL, fontSize:labelFS,
+                  letterSpacing:"0.42em",
+                  color:GOLD(isC?.78:.52),
+                  textAlign:"center", whiteSpace:"nowrap",
+                  textShadow:isC?`0 0 28px ${GOLD(.18)}`:"none",
+                }}>{door.label}</div>
+                <div style={{
+                  fontFamily:CORRO, fontStyle:"italic",
+                  fontSize:subFS, letterSpacing:"0.2em",
+                  color:SILVER(isC?.52:.36),
+                  textAlign:"center", whiteSpace:"nowrap",
+                  marginTop:-Math.round(dW*PHIi2*.45),
+                }}>{door.sublabel}</div>
               </div>
             );
           })}
@@ -597,9 +426,9 @@ export default function DoorScene({ visible }) {
 
         {/* Vignette */}
         <div style={{
-          position: "absolute", inset: 0, pointerEvents: "none",
-          background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 80%, rgba(0,0,0,0.85) 100%)",
-        }} />
+          position:"absolute",inset:0,pointerEvents:"none",
+          background:"radial-gradient(ellipse at center,transparent 36%,rgba(0,0,0,.44) 70%,rgba(0,0,0,.9) 100%)",
+        }}/>
       </div>
     );
   }
@@ -607,40 +436,35 @@ export default function DoorScene({ visible }) {
   return null;
 }
 
-// ── The initial button ─────────────────────────────────────────
-function FindYourTruthButton({ onClick }) {
-  const [hover, setHover] = useState(false);
-  return (
+// ── FIND YOUR TRUTH button ───────────────────────────────────────
+function TruthButton({ onClick }) {
+  const [hover,setHover]=useState(false);
+  return(
     <div style={{
-      position: "fixed", bottom: "clamp(32px,6vh,60px)",
-      left: "50%", transform: "translateX(-50%)",
-      zIndex: 100,
+      position:"fixed",
+      bottom:`clamp(28px,5vh,52px)`,
+      left:"50%", transform:"translateX(-50%)",
+      zIndex:100,
     }}>
       <button
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
+        onMouseEnter={()=>setHover(true)}
+        onMouseLeave={()=>setHover(false)}
         onClick={onClick}
         style={{
-          display: "inline-block",
-          fontFamily: CINZEL,
-          fontSize: "clamp(10px,2.2vw,13px)",
-          letterSpacing: "0.45em",
-          color: hover ? "rgba(235,205,110,0.95)" : "rgba(201,168,76,0.65)",
-          padding: "clamp(12px,2vh,18px) clamp(28px,4vw,52px)",
-          border: `1px solid ${hover ? "rgba(201,168,76,0.45)" : "rgba(201,168,76,0.18)"}`,
-          borderRadius: 2,
-          background: hover ? "rgba(201,168,76,0.04)" : "transparent",
-          boxShadow: hover
-            ? "0 0 40px rgba(201,168,76,0.1), inset 0 0 30px rgba(0,0,0,0.3)"
-            : "inset 0 0 30px rgba(0,0,0,0.3)",
-          transition: "all 0.618s cubic-bezier(0.23,1,0.32,1)",
-          cursor: "pointer",
-          whiteSpace: "nowrap",
-          outline: "none",
+          fontFamily:CINZEL,
+          fontSize:"clamp(10px,2.2vw,13px)",
+          letterSpacing:"0.45em",
+          color:hover?GOLDB(.95):GOLD(.65),
+          padding:`clamp(12px,1.8vh,18px) clamp(28px,4vw,52px)`,
+          border:`1px solid ${hover?GOLD(.45):GOLD(.18)}`,
+          borderRadius:"2px",
+          background:hover?GOLD(.04):"transparent",
+          boxShadow:hover?`0 0 40px ${GOLD(.1)},inset 0 0 30px rgba(0,0,0,.3)`:"inset 0 0 30px rgba(0,0,0,.3)",
+          transition:`all .618s cubic-bezier(.23,1,.32,1)`,
+          cursor:"pointer", whiteSpace:"nowrap",
+          outline:"none", display:"block",
         }}
-      >
-        FIND YOUR TRUTH
-      </button>
+      >FIND YOUR TRUTH</button>
     </div>
   );
 }
