@@ -195,7 +195,7 @@ function Dissolve({ W, H, active }) {
 
 // ── Main component ───────────────────────────────────────────────
 export default function DoorScene({ visible }) {
-  const [state,    setState]   = useState("idle");
+  const [state,    setState]   = useState("expanding");
   const [expandT,  setExpandT] = useState(0);
   const [threeT,   setThreeT]  = useState(0);
   const [dissolve, setDissolve]= useState(false);
@@ -240,7 +240,6 @@ export default function DoorScene({ visible }) {
     return ()=>cancelAnimationFrame(rafRef.current);
   },[state]);
 
-  const onButton    = useCallback(()=>setState("expanding"),[]);
   const onMainDoor  = useCallback(()=>{
     if(state!=="open") return;
     setState("dissolving"); setDissolve(true);
@@ -283,11 +282,6 @@ export default function DoorScene({ visible }) {
   const subFS    = `clamp(7px,${(sideW*.062).toFixed(1)}px,11px)`;
   const headFS   = isMobile ? "clamp(8px,2.8vw,11px)" : "clamp(9px,1vw,12px)";
   const hintFS   = isMobile ? "clamp(8px,2.4vw,10px)" : "clamp(8px,.85vw,10px)";
-
-  // ── IDLE ───────────────────────────────────────────────────
-  if(state==="idle"){
-    return <TruthButton onClick={onButton}/>;
-  }
 
   // ── EXPANDING ──────────────────────────────────────────────
   if(state==="expanding"){
