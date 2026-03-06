@@ -632,259 +632,220 @@ function SmallDoor({ w, h, isCenter, onClick }) {
 
 
 // ─────────────────────────────────────────────────────────────────
-// PRAY SCENE
+// PRAY SCENE — one simultaneous motion
 //
-// The door was a window all along.
+// On click, in a single animation:
+//   POEMS & PROOF  →  shrink + fade to nothing
+//   PRAY door      →  grows from three-doors size to fill screen
+//   video          →  starts tiny inside arch (far away),
+//                     rushes toward viewer as door expands,
+//                     fills arch exactly when door reaches full size
 //
-// PHASES:
-//   zoom     (1.000s) — door scales up from three-doors size to full
-//   reveal   (1.618s) — door FILL fades to transparent, video shows through
-//   window   (∞)      — video plays through arch, frame stays on top
-//
-// LAYERING:
-//   [z:1] YouTube iframe — full screen, behind everything
-//   [z:2] SVG mask — full-screen dark with arch hole cut out (evenodd)
-//   [z:3] Door frame SVG — borders, ornament, handle (no fill)
-//   [z:4] Edge vignette
+// Video is always clipped to the arch shape — it never bleeds outside.
+// The arch is a portal. The video is what was always on the other side.
 // ─────────────────────────────────────────────────────────────────
-function PrayScene({ W, H }) {
+function PrayScene({ W, H, startPos }) {
+  // startPos = { x, y, w, h } — exact position of PRAY door in ThreeDoors
   const [elapsed, setElapsed] = useState(0);
   const rafRef   = useRef(null);
   const startRef = useRef(null);
 
-  // PHI timing (ms)
-  const T_ZOOM   = PHIi * PHI  * 1000;   // 1.000s zoom in
-  const T_REVEAL = PHIi * PHI2 * 1000;   // 1.618s fill fades after zoom
+  // Single animation duration — T×PHI² = 1.618s
+  const DURATION = PHIi * PHI2 * 1000;
 
   useEffect(() => {
     function loop(now) {
       if (!startRef.current) startRef.current = now;
-      setElapsed(now - startRef.current);
-      rafRef.current = requestAnimationFrame(loop);
+      const e = Math.min(DURATION, now - startRef.current);
+      setElapsed(e);
+      if (e < DURATION) rafRef.current = requestAnimationFrame(loop);
     }
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
-  // Door dimensions — match the center door from ThreeDoors
-  // Uses same PHI derivation so zoom starts from identical size
+  const raw = Math.min(1, elapsed / DURATION);
+  const p   = eio(raw);   // easeInOut — smooth single breath
+
+  // ── Target (full) door size ───────────────────────────────────
   const isMobile = W < 640;
-  let sideW, centerW;
-  if (isMobile) {
-    centerW = Math.min(W * PHIi2, 170); sideW = Math.round(centerW * PHIi);
-  } else {
-    const usable = Math.min(W * .85, 820);
-    sideW = Math.round(usable / (2 + PHI + 2*PHIi));
-    centerW = Math.round(sideW * PHI);
-  }
-  const startW = centerW;
-  const startH = Math.round(centerW * PHI2);
-
-  // Full window size — fills most of the viewport, golden rect
   const fullW = isMobile
-    ? Math.round(W * PHIi)           // 62% of viewport width
+    ? Math.round(W * PHIi)
     : Math.round(Math.min(W * PHIi2, H * PHIi3));
-  const fullH = Math.round(fullW * PHI2);
+  const fullH  = Math.round(fullW * PHI2);
+  const fullX  = (W - fullW) / 2;
+  const fullY  = H * PHIi2 - fullH / 2;
 
-  // Center position
-  const cx = W / 2;
-  const cy = H * PHIi2;   // slightly above center — golden vertical position
-
-  // ── Zoom progress ─────────────────────────────────────────────
-  const zoomRaw = Math.min(1, elapsed / T_ZOOM);
-  const zoomT   = eio(zoomRaw);
-
-  // Current door size — interpolates from start to full
-  const doorW = Math.round(startW + (fullW - startW) * zoomT);
-  const doorH = Math.round(startH + (fullH - startH) * zoomT);
-
-  // ── Reveal progress (fill fades after zoom) ───────────────────
-  const revealStart = T_ZOOM;
-  const revealRaw   = Math.max(0, Math.min(1, (elapsed - revealStart) / T_REVEAL));
-  const revealT     = eo(revealRaw);  // 0 = door opaque, 1 = door transparent
-
-  // Door fill alpha — 1 → 0 as reveal progresses
-  const fillAlpha = 1 - revealT;
-
-  // Frame alpha — stays bright (O.dim → O.mid as it reveals)
-  const frameAlpha = O.dim + O.mid * revealT;
-
-  // Mask alpha — dark areas: 0.97 → 0.88 (slight softening as video revealed)
-  const maskAlpha = O.pres + O.dim * (1 - revealT * O.mid);
+  // ── Current door rect — interpolates start → full ─────────────
+  const doorW = Math.round(startPos.w + (fullW - startPos.w) * p);
+  const doorH = Math.round(startPos.h + (fullH - startPos.h) * p);
+  const doorX = startPos.x + (fullX - startPos.x) * p;
+  const doorY = startPos.y + (fullY - startPos.y) * p;
 
   const archH = Math.round(doorW * PHIi);
-  const ornSz = Math.round(archH * PHIi * .88);
+  const ornSz = Math.round(archH * PHIi * .82);
   const m     = Math.round(doorW * PHIi3);
 
-  // Door top-left for SVG mask placement
-  const dx = cx - doorW / 2;
-  const dy = cy - doorH / 2;
+  // ── Arch clip path (relative to door rect) ───────────────────
+  // Used for clipPath on the video container
+  const archClip = `path('M0 ${archH} Q0 0 ${doorW/2} 0 Q${doorW} 0 ${doorW} ${archH} L${doorW} ${doorH} L0 ${doorH} Z')`;
 
-  // Arch path string (absolute, for mask SVG)
-  const archPath = `M${dx} ${dy + archH} Q${dx} ${dy} ${cx} ${dy} Q${dx+doorW} ${dy} ${dx+doorW} ${dy+archH} L${dx+doorW} ${dy+doorH} L${dx} ${dy+doorH} L${dx} ${dy+archH}Z`;
+  // ── Video zoom — starts at PHIi² (38%) fills to 100% ─────────
+  // Video appears far away (small) when door is small,
+  // rushes forward — it zooms FASTER than the door grows
+  // so by the time door is full, video fills the arch completely
+  const videoScale = PHIi2 + (1 - PHIi2) * p;
+
+  // ── Frame alpha — brightens as it opens ───────────────────────
+  const frameA = O.dim + O.mid * p;
+
+  // ── Background darken ─────────────────────────────────────────
+  const bgA = O.mid + O.mid * p;
 
   return (
     <div style={{ position:"fixed", inset:0, zIndex:500 }}>
 
-      {/* ── [z:1] VIDEO — full screen behind everything ─────── */}
-      <iframe
-        src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=0&rel=0&modestbranding=1&iv_load_policy=3&mute=0"
-        allow="autoplay; encrypted-media; fullscreen"
-        allowFullScreen
-        style={{
-          position: "absolute", inset: 0,
-          width: "100%", height: "100%",
-          border: "none",
-          zIndex: 1,
-          opacity: revealT,   // fades in as door fill fades out
-          transition: "none",
-        }}
-      />
+      {/* Darkening background */}
+      <div style={{
+        position:"absolute", inset:0,
+        background:`rgba(3,3,10,${bgA})`,
+        transition:"none",
+      }}/>
 
-      {/* ── [z:2] MASK — dark screen with arch hole ─────────── */}
-      {/* evenodd fill-rule punches the arch shape as a transparent hole */}
-      <svg
-        style={{ position:"absolute", inset:0, width:"100%", height:"100%", zIndex:2, pointerEvents:"none" }}
-        viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="none"
-      >
-        {/* Background rectangle + arch hole = dark everywhere except arch */}
-        <path
-          fillRule="evenodd"
-          fill={`rgba(3,3,10,${maskAlpha})`}
-          d={`M0 0 L${W} 0 L${W} ${H} L0 ${H} Z ${archPath}`}
-        />
+      {/* Ambient glow around arch — grows with door */}
+      <div style={{
+        position:"absolute",
+        left: doorX - doorW * PHIi4,
+        top:  doorY - doorH * PHIi5,
+        width:  doorW * (1 + PHIi4 * 2),
+        height: doorH * (1 + PHIi5 * 2),
+        pointerEvents:"none",
+        background:`radial-gradient(ellipse at 50% 36%,
+          ${GOLD(O.ghost * p)} 0%, transparent 62%)`,
+        borderRadius:`${doorW}px ${doorW}px 0 0`,
+      }}/>
 
-        {/* Door FILL — fades out to reveal video through arch */}
-        {fillAlpha > 0.005 && (
-          <path
-            d={archPath}
-            fill={`rgba(6,7,20,${fillAlpha})`}
+      {/* ── VIDEO clipped to arch shape ───────────────────────── */}
+      {/* Container matches door rect exactly */}
+      <div style={{
+        position:"absolute",
+        left: doorX, top: doorY,
+        width: doorW, height: doorH,
+        overflow:"hidden",
+        clipPath: archClip,
+        WebkitClipPath: archClip,
+      }}>
+        {/* Video — centered, scales from small (far) to full (close) */}
+        <div style={{
+          position:"absolute", inset:0,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          overflow:"hidden",
+        }}>
+          <iframe
+            src="https://www.youtube.com/embed/W-Ps5SrLcpo?autoplay=1&loop=1&playlist=W-Ps5SrLcpo&controls=0&rel=0&modestbranding=1&iv_load_policy=3"
+            allow="autoplay; encrypted-media; fullscreen"
+            allowFullScreen
+            style={{
+              border:"none",
+              width:`${Math.round(100 / videoScale)}%`,
+              height:`${Math.round(100 / videoScale)}%`,
+              transform:`scale(${videoScale})`,
+              transformOrigin:"center center",
+              opacity: O.mid + O.mid * p,  // fades in as it rushes forward
+              flexShrink: 0,
+            }}
           />
-        )}
-      </svg>
+        </div>
+      </div>
 
-      {/* ── [z:3] DOOR FRAME — no fill, frame only ──────────── */}
+      {/* ── DOOR FRAME — no fill, drawn on top of video ───────── */}
       <svg
         style={{
-          position: "absolute",
-          left: dx, top: dy,
+          position:"absolute",
+          left: doorX, top: doorY,
           width: doorW, height: doorH,
-          overflow: "visible",
-          zIndex: 3,
-          pointerEvents: "none",
+          overflow:"visible",
+          pointerEvents:"none",
         }}
         viewBox={`0 0 ${doorW} ${doorH}`}
       >
-        {/* Outer arch frame */}
+        {/* Outer arch */}
         <path
           d={`M1 ${archH} Q1 1 ${doorW/2} 1 Q${doorW-1} 1 ${doorW-1} ${archH}
               L${doorW-1} ${doorH} L1 ${doorH} L1 ${archH}Z`}
           fill="none"
-          stroke={GOLD(frameAlpha)}
+          stroke={GOLD(frameA)}
           strokeWidth="1.4"
         />
 
         {/* Inner panel */}
         {(()=>{
-          const iaH = archH * PHIi, mt = archH * PHIi2;
-          return (
-            <path
-              d={`M${m} ${mt+iaH} Q${m} ${mt} ${doorW/2} ${mt}
-                  Q${doorW-m} ${mt} ${doorW-m} ${mt+iaH}
-                  L${doorW-m} ${doorH*PHIi} L${m} ${doorH*PHIi} L${m} ${mt+iaH}Z`}
-              fill="none"
-              stroke={GOLD(O.ghost + O.dim * revealT)}
-              strokeWidth=".5"
-            />
-          );
+          const iaH=archH*PHIi, mt=archH*PHIi2;
+          return <path
+            d={`M${m} ${mt+iaH} Q${m} ${mt} ${doorW/2} ${mt}
+                Q${doorW-m} ${mt} ${doorW-m} ${mt+iaH}
+                L${doorW-m} ${doorH*PHIi} L${m} ${doorH*PHIi} L${m} ${mt+iaH}Z`}
+            fill="none"
+            stroke={GOLD(O.ghost + O.dim * p)}
+            strokeWidth=".5"
+          />;
         })()}
 
         {/* Golden ratio divider */}
-        <line
-          x1={m*2} y1={doorH*PHIi}
-          x2={doorW-m*2} y2={doorH*PHIi}
-          stroke={GOLD(O.ghost + O.dim * revealT)}
-          strokeWidth=".5"
-        />
+        <line x1={m*2} y1={doorH*PHIi} x2={doorW-m*2} y2={doorH*PHIi}
+          stroke={GOLD(O.ghost)} strokeWidth=".4"/>
 
         {/* Corner jewels */}
         {[
-          [doorW*PHIi3,       doorH*PHIi],
-          [doorW*(1-PHIi3),   doorH*PHIi],
-          [doorW*PHIi3,       doorH*.88],
-          [doorW*(1-PHIi3),   doorH*.88],
+          [doorW*PHIi3,     doorH*PHIi],
+          [doorW*(1-PHIi3), doorH*PHIi],
+          [doorW*PHIi3,     doorH*.88],
+          [doorW*(1-PHIi3), doorH*.88],
         ].map(([x,y],i) => (
-          <circle key={i} cx={x} cy={y} r="2"
-            fill={GOLD(O.dim + O.mid * revealT)}/>
+          <circle key={i} cx={x} cy={y} r="1.8"
+            fill={GOLD(O.dim + O.mid * p)}/>
         ))}
 
         {/* Handle */}
-        <circle
-          cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
-          r={Math.round(doorW*PHIi5)}
-          fill="none"
-          stroke={GOLD(O.mid + O.ghost * revealT)}
-          strokeWidth=".8"
-        />
-        <circle
-          cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
-          r={Math.round(doorW*PHIi6)}
-          fill={GOLD(O.mid + O.ghost * revealT)}
-        />
+        <circle cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
+          r={Math.max(2, Math.round(doorW*PHIi5))}
+          fill="none" stroke={GOLD(O.mid)} strokeWidth=".8"/>
+        <circle cx={doorW*(PHIi+PHIi4)} cy={doorH*PHIi2*PHI}
+          r={Math.max(1, Math.round(doorW*PHIi6))}
+          fill={GOLD(O.mid)}/>
 
         {/* Keyhole */}
-        <circle
-          cx={doorW/2} cy={doorH*(PHIi+PHIi3)}
-          r={Math.round(doorW*PHIi6*PHI)}
-          fill="none"
-          stroke={GOLD(O.ghost + O.dim * revealT)}
-          strokeWidth=".6"
-        />
+        <circle cx={doorW/2} cy={doorH*(PHIi+PHIi3)}
+          r={Math.max(2, Math.round(doorW*PHIi6*PHI))}
+          fill="none" stroke={GOLD(O.ghost)} strokeWidth=".5"/>
         <line
-          x1={doorW/2} y1={doorH*(PHIi+PHIi3)+doorW*PHIi6*PHI}
-          x2={doorW/2} y2={doorH*(PHIi+PHIi3)+doorW*PHIi5}
-          stroke={GOLD(O.ghost + O.dim * revealT)}
-          strokeWidth=".6"
-        />
+          x1={doorW/2} y1={doorH*(PHIi+PHIi3)+Math.max(2,doorW*PHIi6*PHI)}
+          x2={doorW/2} y2={doorH*(PHIi+PHIi3)+Math.max(3,doorW*PHIi5)}
+          stroke={GOLD(O.ghost)} strokeWidth=".5"/>
       </svg>
 
-      {/* Ornament — fades out as video reveals (was always decorating glass) */}
+      {/* Ornament — fades out as video takes over */}
       <div style={{
-        position: "absolute",
-        left: dx + doorW/2,
-        top:  dy + archH * PHIi2,
-        transform: "translateX(-50%)",
-        pointerEvents: "none",
-        zIndex: 3,
-        opacity: O.mid + O.ghost * zoomT - O.mid * revealT,
+        position:"absolute",
+        left: doorX + doorW/2,
+        top:  doorY + archH * PHIi2,
+        transform:"translateX(-50%)",
+        pointerEvents:"none",
+        opacity: O.mid * (1 - p * p),
       }}>
         <Ornament size={ornSz} alpha={1}/>
       </div>
 
-      {/* ── [z:4] EDGE VIGNETTE — frames the whole composition ─ */}
+      {/* Edge vignette */}
       <div style={{
-        position: "absolute", inset: 0, pointerEvents: "none", zIndex: 4,
-        boxShadow: `inset 0 0 ${Math.round(W*PHIi3)}px ${Math.round(W*PHIi4)}px rgba(0,0,0,${O.pres})`,
-      }}/>
-
-      {/* Ambient gold glow around arch — fades as video takes over */}
-      <div style={{
-        position: "absolute",
-        left: dx - doorW * PHIi3,
-        top:  dy - doorH * PHIi4,
-        width: doorW * (1 + PHIi3 * 2),
-        height: doorH * (1 + PHIi4 * 2),
-        pointerEvents: "none",
-        zIndex: 2,
-        background: `radial-gradient(ellipse at 50% 38%,
-          ${GOLD(O.ghost * (1 - revealT * PHIi))} 0%, transparent 65%)`,
-        borderRadius: `${doorW}px ${doorW}px 0 0`,
+        position:"absolute", inset:0, pointerEvents:"none",
+        boxShadow:`inset 0 0 ${Math.round(W*PHIi3)}px ${Math.round(W*PHIi4)}px rgba(0,0,0,${O.pres})`,
       }}/>
 
     </div>
   );
 }
+
 
 // ─────────────────────────────────────────────────────────────────
 // THREE DOORS SCREEN — scrollable, PHI minHeight
@@ -892,23 +853,34 @@ function PrayScene({ W, H }) {
 function ThreeDoors({ t, W, H }) {
   const isMobile = W < 640;
   const headT = eo(Math.max(0, (t - .08) / .42));
-  const [prayActive, setPrayActive] = useState(false);
-  const [dismissT, setDismissT] = useState(0);   // 0→1 others fade out
+  const [prayActive,  setPrayActive]  = useState(false);
+  const [prayStartPos, setPrayStartPos] = useState(null);
+  const [dismissT,    setDismissT]    = useState(0);
   const dismissRef = useRef(null);
+  const prayDoorRef = useRef(null);   // ref on PRAY door div
 
-  // When PRAY clicked: animate others out, then mount PrayScene
+  // PRAY clicked: capture door position, start simultaneous animation
   const onPrayClick = () => {
     if (prayActive) return;
+    // Measure PRAY door position on screen
+    let pos = { x: W/2 - sideW/2, y: H/2 - sideH/2, w: sideW, h: sideH };
+    if (prayDoorRef.current) {
+      const r = prayDoorRef.current.getBoundingClientRect();
+      pos = { x: r.left, y: r.top, w: r.width, h: r.height };
+    }
+    setPrayStartPos(pos);
+
+    // Dismiss animation — runs simultaneously with PrayScene zoom
+    const D = PHIi * PHI2 * 1000;   // same duration as PrayScene
     let start = null;
-    const D = PHIi * PHIi * 1000;   // 0.382s fade-out
     function loop(now) {
       if (!start) start = now;
       const p = Math.min(1, (now - start) / D);
       setDismissT(p);
       if (p < 1) dismissRef.current = requestAnimationFrame(loop);
-      else setPrayActive(true);
     }
     dismissRef.current = requestAnimationFrame(loop);
+    setPrayActive(true);
   };
 
   // Door sizing — PHI-derived
@@ -943,7 +915,7 @@ function ThreeDoors({ t, W, H }) {
   // Gap between heading and doors
   const sectionGap = Math.round(centerW * PHIi4);
 
-  if (prayActive) return <PrayScene W={W} H={H} />;
+  if (prayActive && prayStartPos) return <PrayScene W={W} H={H} startPos={prayStartPos} />;
 
   return (
     <div style={{
@@ -1005,18 +977,23 @@ function ThreeDoors({ t, W, H }) {
             // Per-door gap below (between door SVG and label)
             const itemGap = Math.round(dW * PHIi5);
             return (
-              <div key={door.label} style={{
-                display:"flex", flexDirection:"column",
-                alignItems:"center",
-                gap: itemGap,
-                opacity: door.label === "PRAY"
-                  ? dt
-                  : dt * (1 - dismissT),
-                transform: door.label === "PRAY"
-                  ? `translateY(${(1 - dt) * 34}px)`
-                  : `translateY(${(1 - dt) * 34 + dismissT * 20}px)`,
-                transition: "none",
-              }}>
+              <div
+                key={door.label}
+                ref={door.label === "PRAY" ? prayDoorRef : null}
+                style={{
+                  display:"flex", flexDirection:"column",
+                  alignItems:"center",
+                  gap: itemGap,
+                  // PRAY: stays visible while PrayScene handles it
+                  // POEMS/PROOF: shrink + fade simultaneously
+                  opacity: door.label === "PRAY"
+                    ? dt * (1 - dismissT)          // PRAY fades as PrayScene takes over
+                    : dt * (1 - dismissT),
+                  transform: door.label === "PRAY"
+                    ? `translateY(${(1 - dt) * 34}px) scale(${1 - dismissT * PHIi2})`
+                    : `translateY(${(1 - dt) * 34 + dismissT * 24}px) scale(${1 - dismissT * PHIi})`,
+                  transition: "none",
+                }}>
                 <SmallDoor w={dW} h={dH} isCenter={isC}
                   onClick={() => {
                     if (door.label === "PRAY") onPrayClick();
