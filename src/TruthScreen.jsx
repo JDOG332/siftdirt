@@ -1171,33 +1171,7 @@ export default function TruthScreen() {
         paddingTop: `${clampedTop}px`,
       }}>
 
-      {/* ── BIG DOOR ─────────────────────────────────────── */}
-      <BigDoor
-        sys={sys}
-        t={doorT}
-        quoteT={quoteT}
-        onClick={handleDoorClick}
-      />
-
-      {/* ── BRIDGE — door → FIND YOUR TRUTH → formula ───── */}
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 0,
-        paddingBottom: Math.round(minH * PHIi4),
-        minHeight: Math.round(bridgeH * 3 + fLabel * PHI2),
-        width: "100%",
-      }}>
-        {/* Top bridge line */}
-        <div style={{
-          width: "1px",
-          height: bridgeH,
-          background: `linear-gradient(180deg, ${GOLD(O.ghost * labelT)}, ${GOLD(O.whisper * labelT)})`,
-        }}/>
-
-        {/* FIND YOUR TRUTH — the threshold inscription */}
+        {/* ── FIND YOUR TRUTH — hovers ABOVE the door ──────── */}
         <div style={{
           fontFamily: CINZEL,
           fontSize: `${Math.round(fLabel)}px`,
@@ -1205,20 +1179,39 @@ export default function TruthScreen() {
           color: GOLD(O.mid * labelT),
           textAlign: "center",
           whiteSpace: "nowrap",
-          padding: `${Math.round(bridgeH * PHIi)}px 0`,
+          marginBottom: bridgeH,   // PHI gap between label and line
           animation: labelT > .9 ? "breathe 3.4s ease-in-out infinite" : "none",
+          opacity: labelT,
+          transform: `translateY(${(1 - labelT) * -8}px)`,
         }}>FIND YOUR TRUTH</div>
 
-        {/* Bottom bridge line */}
+        {/* Bridge line: label → door top */}
+        <div style={{
+          width: "1px",
+          height: bridgeH,
+          marginBottom: 0,
+          background: `linear-gradient(180deg, ${GOLD(O.ghost * labelT)}, ${GOLD(O.whisper * labelT)})`,
+        }}/>
+
+        {/* ── BIG DOOR ───────────────────────────────────── */}
+        <BigDoor
+          sys={sys}
+          t={doorT}
+          quoteT={quoteT}
+          onClick={handleDoorClick}
+        />
+
+        {/* Bridge line: door bottom → formula */}
         <div style={{
           width: "1px",
           height: bridgeH,
           background: `linear-gradient(180deg, ${GOLD(O.whisper * formT)}, ${GOLD(O.ghost * formT)})`,
         }}/>
 
-        {/* ── FORMULA — the foundation ─────────────────── */}
+        {/* ── FORMULA — tight below door ─────────────────── */}
         <div style={{
           paddingTop: Math.round(bridgeH * PHIi2),
+          paddingBottom: Math.round(minH * PHIi4),
           paddingLeft: `clamp(${Math.round(doorW * PHIi4)}px, 5vw, ${Math.round(doorW * PHIi2)}px)`,
           paddingRight: `clamp(${Math.round(doorW * PHIi4)}px, 5vw, ${Math.round(doorW * PHIi2)}px)`,
           width: "100%",
@@ -1229,7 +1222,6 @@ export default function TruthScreen() {
         }}>
           <Formula sys={sys} t={formT}/>
         </div>
-      </div>
 
       </div>{/* end content wrapper */}
 
