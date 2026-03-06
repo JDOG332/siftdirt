@@ -962,8 +962,8 @@ function ThreeDoors({ t, W, H }) {
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      justifyContent: "center",
-      paddingTop:    `${padV}px`,
+      justifyContent: "flex-start",   // pin from top — equal distance top↔heading↔door
+      paddingTop:    `${sectionGap}px`,  // same gap as heading→door
       paddingBottom: `${padV}px`,
       paddingLeft:   "clamp(12px,3vw,28px)",
       paddingRight:  "clamp(12px,3vw,28px)",
