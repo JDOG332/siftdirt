@@ -227,7 +227,7 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const [hover, setHover] = useState(false);
   const hA = hover ? 1 : 0;
   const { doorW: w, doorH: h, archH, ornSz, panM, quoteM, phraseGap,
-          fBase, fSub, isMobile } = sys;
+          fBase, fSub, bridgeH, isMobile } = sys;
 
   const fT = eo(t);
 
