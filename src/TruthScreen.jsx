@@ -701,7 +701,8 @@ function PrayScene({ W, H, startPos }) {
   const archRel = `M0 ${archH} Q0 0 ${doorW/2} 0 Q${doorW} 0 ${doorW} ${archH} L${doorW} ${doorH} L0 ${doorH} Z`;
 
   // ── Arch clip (absolute, for video container) ──────────────────
-  const archClip = `path('M${doorX} ${doorY+archH} Q${doorX} ${doorY} ${doorX+doorW/2} ${doorY} Q${doorX+doorW} ${doorY} ${doorX+doorW} ${doorY+archH} L${doorX+doorW} ${doorY+doorH} L${doorX} ${doorY+doorH} Z')`;
+  // Clip path uses RELATIVE coords — div is already at doorX,doorY
+  const archClip = `path('M0 ${archH} Q0 0 ${doorW/2} 0 Q${doorW} 0 ${doorW} ${archH} L${doorW} ${doorH} L0 ${doorH} Z')`;
 
   // Frame / video opacities
   const frameA = O.dim + O.mid * p;
