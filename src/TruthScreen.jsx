@@ -236,10 +236,14 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const iaH = archH * PHIi;    // inner arch panel height
   const mt  = archH * PHIi2;   // inner arch panel top margin
 
-  // Quote area: from archH + quoteM to h × PHI ratio
-  const quoteTop  = archH + quoteM;
-  const quoteBot  = Math.round(h * PHIi);   // bottom of quote zone at h×PHIi
-  const quoteInH  = quoteBot - quoteTop;    // total available for quote
+  // Quote area:
+  //   TOP: just below ornament bottom (archH*PHIi2 + ornSz + gap)
+  //   BOT: just above keyhole (keyhole is at h*(PHIi+PHIi3))
+  const ornTop   = Math.round(archH * PHIi2);
+  const ornBot   = ornTop + ornSz;
+  const quoteTop = ornBot + Math.round(w * PHIi5);   // PHI breathing room below ornament
+  const quoteBot = Math.round(h * (PHIi + PHIi3) - w * PHIi5);
+  const quoteInH = quoteBot - quoteTop;
 
   return (
     <div
@@ -360,39 +364,41 @@ function BigDoor({ sys, t, quoteT, onClick }) {
       </div>
 
       {/* ── QUOTE INSIDE DOOR ──────────────────────────── */}
+      {/* Zone: ornament bottom → keyhole top. space-evenly distributes cleanly. */}
       <div style={{
         position: "absolute",
         top: quoteTop,
-        left: quoteM,
-        right: quoteM,
+        left: Math.round(w * PHIi4),
+        right: Math.round(w * PHIi4),
         height: quoteInH,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        gap: phraseGap,
+        justifyContent: "space-evenly",   // uniform rhythm, no cramping
         textAlign: "center",
         pointerEvents: "none",
       }}>
-        {PHRASES.map((p, i) => {
+        {PHRASES.map((phrase, i) => {
           const delay = TIME.q0 + i * TIME.qStep;
           const pt = eo(Math.max(0, (quoteT - delay) / (TIME.qStep * PHI)));
           const isFirst = i === 0;
+          // All phrases same size — differentiated by weight + opacity only
+          // No wrapping size jump = clean uniform rhythm
+          const fs = Math.round(fSub * PHI);  // single size: PHI step above fSub
           return (
             <div key={i} style={{
               fontFamily: CORRO,
               fontStyle: "italic",
-              fontWeight: 300,
-              fontSize: `${Math.round(isFirst ? fBase : fSub)}px`,
-              letterSpacing: isFirst ? "0.06em" : "0.03em",
-              lineHeight: PHIi + 1,   // 1.618 — golden line height
-              color: isFirst
-                ? SILVER(O.pres * pt)
-                : SILVER(O.mid * pt),
+              fontWeight: isFirst ? 400 : 300,
+              fontSize: `${fs}px`,
+              letterSpacing: "0.04em",
+              lineHeight: 1.4,
+              color: SILVER(isFirst ? O.pres * pt : O.mid * pt),
               opacity: pt,
               transform: `translateY(${(1 - pt) * Math.round(w * PHIi6)}px)`,
               transition: "none",
-            }}>{p}</div>
+              whiteSpace: "nowrap",
+            }}>{phrase}</div>
           );
         })}
       </div>
