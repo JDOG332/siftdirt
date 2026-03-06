@@ -3,14 +3,13 @@ import IntroCanvas from "./IntroCanvas.jsx";
 import EquationReveal from "./EquationReveal.jsx";
 import DoorScene from "./DoorScene.jsx";
 import InfinityCursor from "./InfinityCursor.jsx";
+import TouchTrail from "./TouchTrail.jsx";
 import "./global.css";
 
 export default function App() {
   const [scene, setScene] = useState("intro");
-  // "intro" → "equation" → "door"
 
-  // Click anywhere skips to door scene immediately
-  const handleSkip = useCallback(() => {
+  const handleSkip = useCallback((e) => {
     if (scene === "intro" || scene === "equation") {
       setScene("door");
     }
@@ -21,8 +20,11 @@ export default function App() {
       style={{ minHeight: "100vh", background: "#03030a" }}
       onClick={handleSkip}
     >
-      {/* Infinity loop cursor — desktop only */}
+      {/* Desktop: infinity loop cursor */}
       <InfinityCursor />
+
+      {/* Mobile: touch trail with lemniscate bloom */}
+      <TouchTrail />
 
       {scene === "intro" && (
         <IntroCanvas onComplete={() => setScene("equation")} />
@@ -35,11 +37,7 @@ export default function App() {
         />
       )}
 
-      {/* Door scene layers on top — stops click propagation internally */}
-      <DoorScene
-        visible={scene === "door"}
-        onDoorClick={(e) => e.stopPropagation()}
-      />
+      <DoorScene visible={scene === "door"} />
     </div>
   );
 }
