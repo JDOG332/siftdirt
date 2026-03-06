@@ -215,12 +215,12 @@ function Ornament({ size, alpha = O.pres }) {
 // ARCH DOOR (big, with quote and label inside)
 // ─────────────────────────────────────────────────────────────────
 const PHRASES = [
-  "Truth is found",
+  "“Truth is found",
   "by removing noise,",
   "watching without blinking,",
   "and holding reality",
   "from three angles",
-  "until it can't slip away.",
+  "until it can’t slip away.”",
 ];
 
 function BigDoor({ sys, t, quoteT, onClick }) {
@@ -384,7 +384,7 @@ function BigDoor({ sys, t, quoteT, onClick }) {
           const isFirst = i === 0;
           // All phrases same size — differentiated by weight + opacity only
           // No wrapping size jump = clean uniform rhythm
-          const fs = Math.round(fSub * PHI);  // single size: PHI step above fSub
+          const fs = Math.round(fSub);        // one PHI level down from previous
           return (
             <div key={i} style={{
               fontFamily: CORRO,
@@ -412,7 +412,8 @@ function BigDoor({ sys, t, quoteT, onClick }) {
 function Formula({ sys, t }) {
   const fT = eo(t);
   if (fT <= 0.01) return null;
-  const { fLabel, fPsi, fSub: sys_fSub, isMobile } = sys;
+  const { fLabel: fLabelRaw, fPsi, fSub: sys_fSub, isMobile } = sys;
+  const fLabel = Math.round(fLabelRaw * PHI);  // one PHI level up
   const sub = `${Math.round(fLabel * PHIi)}px`;
 
   return (
