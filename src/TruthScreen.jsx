@@ -921,12 +921,12 @@ function ThreeDoors({ t, W, H }) {
   // Door sizing — PHI-derived
   let sideW, centerW;
   if (isMobile) {
-    centerW = Math.min(W * PHIi2, 170);
-    sideW   = Math.round(centerW * PHIi);
+    centerW = Math.min(Math.round(W * PHIi), 280);
+    sideW   = Math.round(centerW * 0.75);   // 3/4 of center
   } else {
     const usable = Math.min(W * .85, 820);
-    sideW   = Math.round(usable / (2 + PHI + 2 * PHIi));
-    centerW = Math.round(sideW * PHI);
+    centerW = Math.round(usable / (1 + 2 * 0.75));  // 2 sides at 3/4 + center
+    sideW   = Math.round(centerW * 0.75);
   }
   const sideH   = Math.round(sideW   * PHI2);
   const centerH = Math.round(centerW * PHI2);
@@ -941,8 +941,10 @@ function ThreeDoors({ t, W, H }) {
   const padV = Math.round((minH - centerH) * PHIi2);
 
   // Font sizes — PHI-ladder
-  const labelFS = `${Math.round(sideW * PHIi5)}px`;
-  const subFS   = `${Math.round(sideW * PHIi6)}px`;
+  // Label fills ~85% door width — Cinzel 5-char base: dW*0.85/(5×0.54+4×0.06)
+  const LDEN = 5 * 0.54 + 4 * 0.06;   // 2.94 — denominator for 5-char CINZEL label
+  const centerLabelFS = Math.round(centerW * 0.85 / LDEN);
+  const sideLabelFS   = Math.round(sideW   * 0.85 / LDEN);
   const headFS  = isMobile
     ? `${Math.round(W * PHIi6 * PHIi)}px`
     : `${Math.round(W * PHIi6 * PHIi2)}px`;
@@ -1035,11 +1037,11 @@ function ThreeDoors({ t, W, H }) {
                     else window.open(door.href, "_blank");
                   }}/>
 
-                {/* Label */}
+                {/* Label — fills ~85% of door width */}
                 <div style={{
                   fontFamily: CINZEL,
-                  fontSize: labelFS,
-                  letterSpacing: "0.42em",
+                  fontSize: `${isC ? centerLabelFS : sideLabelFS}px`,
+                  letterSpacing: "0.06em",
                   color: GOLD(isC ? O.pres : O.mid),
                   textAlign: "center",
                   whiteSpace: "nowrap",
@@ -1047,18 +1049,6 @@ function ThreeDoors({ t, W, H }) {
                     ? `0 0 ${Math.round(dW * PHIi3)}px ${GOLD(O.dim)}`
                     : "none",
                 }}>{door.label}</div>
-
-                {/* Sublabel */}
-                <div style={{
-                  fontFamily: CORRO,
-                  fontStyle: "italic",
-                  fontSize: subFS,
-                  letterSpacing: "0.2em",
-                  color: SILVER(isC ? O.mid : O.dim),
-                  textAlign: "center",
-                  whiteSpace: "nowrap",
-                  marginTop: -Math.round(itemGap * PHIi),
-                }}>{door.sublabel}</div>
               </div>
             );
           })}
