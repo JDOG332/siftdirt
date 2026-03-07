@@ -239,10 +239,11 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   // Quote zone: ornament bottom → just above handle circle
   const handleY  = Math.round(h * PHIi);
   const ornBot_  = Math.round(archH * PHIi2) + ornSz;
+  // Zone is strictly ornBot+bridgeH → handleY-bridgeH
+  // space-evenly distributes 6 phrases within whatever space exists
   const quoteTop = ornBot_ + bridgeH;
-  // Zone ends at PHIi of the space between ornament and handle — upper 61.8%, 93px above handle
-  const quoteBot = Math.round(ornBot_ + (handleY - ornBot_) * PHIi);
-  const quoteInH = quoteBot - quoteTop;
+  const quoteBot = handleY - bridgeH;
+  const quoteInH = Math.max(10, quoteBot - quoteTop);
 
   return (
     <div
