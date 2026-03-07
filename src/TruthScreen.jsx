@@ -942,8 +942,8 @@ function ThreeDoors({ t, W, H }) {
 
   // Font sizes — labels at 55% door width (slightly smaller, cleaner)
   const LDEN = 5 * 0.54 + 4 * 0.06;
-  const centerLabelFS = Math.round(centerW * 0.55 / LDEN);
-  const sideLabelFS   = Math.round(sideW   * 0.55 / LDEN);
+  const centerLabelFS = Math.round(centerW * 0.55 / LDEN * PHIi);
+  const sideLabelFS   = Math.round(sideW   * 0.55 / LDEN * PHIi);
   const headFS  = isMobile
     ? `${Math.round(W * PHIi6 * PHIi)}px`
     : `${Math.round(W * PHIi6 * PHIi2)}px`;
