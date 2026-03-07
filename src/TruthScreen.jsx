@@ -227,7 +227,7 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const [hover, setHover] = useState(false);
   const hA = hover ? 1 : 0;
   const { doorW: w, doorH: h, archH, ornSz, panM, quoteM, phraseGap,
-          fBase, fSub, isMobile } = sys;
+          fBase, fSub, bridgeH, isMobile } = sys;
 
   const fT = eo(t);
 
@@ -237,10 +237,8 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const mt  = archH * PHIi2;   // inner arch panel top margin
 
   // Quote zone: ornament bottom → just above handle circle
-  // Sits in the open upper-body space, clearing the handle below
   const handleY  = Math.round(h * PHIi);
-  const ornTop_  = Math.round(archH * PHIi2);
-  const ornBot_  = ornTop_ + ornSz;
+  const ornBot_  = Math.round(archH * PHIi2) + ornSz;
   const quoteTop = ornBot_ + bridgeH;
   const quoteBot = handleY - bridgeH;
   const quoteInH = quoteBot - quoteTop;
@@ -920,18 +918,13 @@ function ThreeDoors({ t, W, H }) {
   };
 
   // Door sizing — PHI-derived
-  // Desktop: cap centerH to H×PHIi so everything fits above the fold
-  // derive centerW from capped height: centerW = centerH / PHI²
   let sideW, centerW;
   if (isMobile) {
     centerW = Math.min(Math.round(W * PHIi), 280);
     sideW   = Math.round(centerW * 0.75);   // 3/4 of center
   } else {
-    const centerH_max = Math.round(H * PHIi);       // H×PHIi = max door height
-    const centerW_h   = Math.round(centerH_max / PHI2);  // width from height cap
-    const usable      = Math.min(W * .85, 820);
-    const centerW_w   = Math.round(usable / (1 + 2 * 0.75));  // width from screen width
-    centerW = Math.min(centerW_h, centerW_w);        // use whichever is smaller
+    const usable = Math.min(W * .85, 820);
+    centerW = Math.round(usable / (1 + 2 * 0.75));  // 2 sides at 3/4 + center
     sideW   = Math.round(centerW * 0.75);
   }
   const sideH   = Math.round(sideW   * PHI2);
@@ -1140,7 +1133,7 @@ export default function TruthScreen() {
   // Layout: door area + bridge + formula pinned at bottom
   // Use flexbox with spacer to push formula to bottom
   // Pin FIND YOUR TRUTH close to top — H×PHIi6 breathing room only
-  // Shift everything down slightly — H×PHIi6 breathing at top
+  // Shift everything down slightly
   const clampedTop = Math.round(H * PHIi6);
 
   // PHI breathing rule
