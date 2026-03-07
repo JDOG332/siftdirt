@@ -240,8 +240,8 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const handleY  = Math.round(h * PHIi);
   const ornBot_  = Math.round(archH * PHIi2) + ornSz;
   const quoteTop = ornBot_ + bridgeH;
-  // Zone sized to content + one bridgeH breathing — sits in upper body, clear of handle
-  const quoteBot = quoteTop + Math.round(w * PHIi6 * 1.4 * 6) + bridgeH;
+  // Zone ends at PHIi of the space between ornament and handle — upper 61.8%, 93px above handle
+  const quoteBot = Math.round(ornBot_ + (handleY - ornBot_) * PHIi);
   const quoteInH = quoteBot - quoteTop;
 
   return (
