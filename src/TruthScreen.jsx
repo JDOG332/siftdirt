@@ -917,18 +917,19 @@ function ThreeDoors({ t, W, H }) {
     setPrayActive(true);
   };
 
-  // Door sizing — PHI-derived
+  // Door sizing — fatter (PHI aspect, not PHI²), capped to fit above fold
   let sideW, centerW;
   if (isMobile) {
-    centerW = Math.min(Math.round(W * PHIi), 280);
-    sideW   = Math.round(centerW * 0.75);   // 3/4 of center
+    centerW = Math.min(Math.round(W * PHIi), 260);
+    sideW   = Math.round(centerW * 0.75);
   } else {
-    const usable = Math.min(W * .85, 820);
-    centerW = Math.round(usable / (1 + 2 * 0.75));  // 2 sides at 3/4 + center
+    // centerH capped at 56% of viewport height → fits above fold
+    const centerH_max = Math.round(H * 0.56);
+    centerW = Math.round(centerH_max / PHI);   // PHI aspect (wider/shorter than PHI²)
     sideW   = Math.round(centerW * 0.75);
   }
-  const sideH   = Math.round(sideW   * PHI2);
-  const centerH = Math.round(centerW * PHI2);
+  const sideH   = Math.round(sideW   * PHI);   // PHI aspect — fatter doors
+  const centerH = Math.round(centerW * PHI);
   const doorGap = isMobile
     ? Math.round(sideW * PHIi2)
     : Math.round(sideW * PHIi);
@@ -939,11 +940,10 @@ function ThreeDoors({ t, W, H }) {
   // Padding top/bottom = (minH - centerH) / 2  →  exactly centerH×PHIi÷2 each side
   const padV = Math.round((minH - centerH) * PHIi2);
 
-  // Font sizes — PHI-ladder
-  // Label fills ~85% door width — Cinzel 5-char base: dW*0.85/(5×0.54+4×0.06)
-  const LDEN = 5 * 0.54 + 4 * 0.06;   // 2.94 — denominator for 5-char CINZEL label
-  const centerLabelFS = Math.round(centerW * 0.85 / LDEN);
-  const sideLabelFS   = Math.round(sideW   * 0.85 / LDEN);
+  // Font sizes — labels at 55% door width (slightly smaller, cleaner)
+  const LDEN = 5 * 0.54 + 4 * 0.06;
+  const centerLabelFS = Math.round(centerW * 0.55 / LDEN);
+  const sideLabelFS   = Math.round(sideW   * 0.55 / LDEN);
   const headFS  = isMobile
     ? `${Math.round(W * PHIi6 * PHIi)}px`
     : `${Math.round(W * PHIi6 * PHIi2)}px`;
