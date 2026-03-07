@@ -1099,10 +1099,24 @@ export default function TruthScreen() {
     return () => cancelAnimationFrame(rafRef.current);
   }, [phase]);
 
+  const [xfadeT, setXfadeT] = useState(0);
+
   const handleDoorClick = () => {
     if (phase !== "truth") return;
-    setPhase("dissolving"); setDissolve(true);
-    setTimeout(() => { setDissolve(false); setPhase("three"); }, Math.round(TIME.doorFull * 1000 * PHI));
+    setXfadeT(0);
+    setPhase("dissolving");
+    const DUR = 1000;   // 1 second crossfade
+    let start = null;
+    function loop(now) {
+      if (!start) start = now;
+      const raw = Math.min(1, (now - start) / DUR);
+      // ease-in-out
+      const p = raw < 0.5 ? 2*raw*raw : 1 - Math.pow(-2*raw+2,2)/2;
+      setXfadeT(p);
+      if (raw < 1) rafRef.current = requestAnimationFrame(loop);
+      else { setPhase("three"); setThreeT(0); }
+    }
+    rafRef.current = requestAnimationFrame(loop);
   };
 
   const { W, H } = dims;
@@ -1110,9 +1124,15 @@ export default function TruthScreen() {
   const { isMobile, doorW, doorH, bridgeH, fLabel, fSub } = sys;
 
   if (phase === "dissolving") {
+    // Dark overlay fades in (hides TruthScreen), ThreeDoors fades in simultaneously.
+    // Result: truth content dissolves out, choose-path dissolves in.
     return (
-      <div style={{ position:"fixed", inset:0, background:"rgba(3,3,10,.95)" }}>
-        <Dissolve W={W} H={H} active={dissolve}/>
+      <div style={{ position:"fixed", inset:0, background:"#03030a" }}>
+        {/* INCOMING — three doors fading in over dark background */}
+        <div style={{ position:"absolute", inset:0, opacity: xfadeT,
+          transition:"none", pointerEvents:"none" }}>
+          <ThreeDoors t={xfadeT} W={W} H={H}/>
+        </div>
       </div>
     );
   }
