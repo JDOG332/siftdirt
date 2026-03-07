@@ -241,7 +241,7 @@ function BigDoor({ sys, t, quoteT, onClick }) {
   const ornBot_  = Math.round(archH * PHIi2) + ornSz;
   // Zone is strictly ornBot+bridgeH → handleY-bridgeH
   // space-evenly distributes 6 phrases within whatever space exists
-  const quoteTop = ornBot_ + bridgeH;
+  const quoteTop = ornBot_;
   const quoteBot = handleY - bridgeH;
   const quoteInH = Math.max(10, quoteBot - quoteTop);
 
