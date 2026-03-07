@@ -85,18 +85,8 @@ function eio(t){ t=Math.max(0,Math.min(1,t)); return t<.5?4*t*t*t:1-Math.pow(-2*
 function buildSystem(W, H) {
   const isMobile = W < 640;
 
-  // SEED: doorW
-  // Mobile portrait: W × PHIi  (door = 62% of viewport width)
-  // Desktop landscape: H × PHIi² (door height = H×PHIi, width = H×PHIi²)
-  const rawDoorW = isMobile
-    ? W * PHIi
-    : Math.min(H * PHIi2, W * PHIi3);
-  const doorW = Math.round(rawDoorW);
-
-  // doorH — mobile: tall arch (w×PHI²), desktop: golden rect (w×PHI)
-  const doorH = isMobile
-    ? Math.round(doorW * PHI2)    // portrait arch
-    : Math.round(doorW * PHI);    // landscape golden rect
+  // SEED: use getCenterDoor so BigDoor matches ThreeDoors center exactly
+  const { centerW: doorW, centerH: doorH } = getCenterDoor(W, H);
 
   // Arch — top curved portion = doorW × PHIi
   const archH = Math.round(doorW * PHIi);
@@ -134,6 +124,28 @@ function buildSystem(W, H) {
     minH,
   };
 }
+// ─────────────────────────────────────────────────────────────────
+// SHARED CENTER DOOR SIZE — used by both TruthScreen & ThreeDoors
+// so the door is pixel-identical between the two screens
+// ─────────────────────────────────────────────────────────────────
+function getCenterDoor(W, H) {
+  const isMobile = W < 640;
+  let centerW;
+  if (isMobile) {
+    centerW = Math.min(Math.round(W * PHIi), 260);
+  } else {
+    const centerH_max = Math.round(H * 0.56);
+    centerW = Math.round(centerH_max / PHI);
+  }
+  const centerH   = Math.round(centerW * PHI);
+  const sectionGap = Math.round(centerW * PHIi4);
+  const headFS    = Math.round(W * PHIi6 * PHIi2);
+  const headH     = Math.round(headFS * 1.4);
+  // y-offset where door top sits in ThreeDoors layout
+  const doorTopY  = sectionGap + headH + sectionGap;
+  return { centerW, centerH, sectionGap, doorTopY };
+}
+
 
 // ─────────────────────────────────────────────────────────────────
 // SACRED GEOMETRY ORNAMENT
@@ -884,7 +896,7 @@ function PrayScene({ W, H, startPos }) {
 // ─────────────────────────────────────────────────────────────────
 // THREE DOORS SCREEN — scrollable, PHI minHeight
 // ─────────────────────────────────────────────────────────────────
-function ThreeDoors({ t, W, H }) {
+function ThreeDoors({ t, W, H, hideCenterDoor = false }) {
   const isMobile = W < 640;
   const headT = eo(Math.max(0, (t - .08) / .42));
   const [prayActive,  setPrayActive]  = useState(false);
@@ -1022,7 +1034,7 @@ function ThreeDoors({ t, W, H }) {
                   gap: itemGap,
                   // PRAY: stays visible while PrayScene handles it
                   // POEMS/PROOF: shrink + fade simultaneously
-                  opacity: door.label === "PRAY"
+                  opacity: (hideCenterDoor && isC) ? 0 : door.label === "PRAY"
                     ? dt * (1 - dismissT)          // PRAY fades as PrayScene takes over
                     : dt * (1 - dismissT),
                   transform: door.label === "PRAY"
@@ -1066,6 +1078,7 @@ export default function TruthScreen() {
   const [phase,    setPhase]    = useState("truth");
   const [dissolve, setDissolve] = useState(false);
   const [threeT,   setThreeT]   = useState(0);
+  const [xfadeT,   setXfadeT]   = useState(0);  // 0→1 crossfade progress
   const startRef = useRef(null);
   const rafRef   = useRef(null);
   const [dims, setDims] = useState({ W: window.innerWidth, H: window.innerHeight });
@@ -1101,8 +1114,18 @@ export default function TruthScreen() {
 
   const handleDoorClick = () => {
     if (phase !== "truth") return;
-    setPhase("dissolving"); setDissolve(true);
-    setTimeout(() => { setDissolve(false); setPhase("three"); }, Math.round(TIME.doorFull * 1000 * PHI));
+    setXfadeT(0);
+    setPhase("dissolving");
+    const DUR = TIME.doorFull * 1000 * PHI;  // ~1618ms
+    let start = null;
+    function loop(now) {
+      if (!start) start = now;
+      const p = Math.min(1, (now - start) / DUR);
+      setXfadeT(p);
+      if (p < 1) rafRef.current = requestAnimationFrame(loop);
+      else { setPhase("three"); setThreeT(0); }
+    }
+    rafRef.current = requestAnimationFrame(loop);
   };
 
   const { W, H } = dims;
@@ -1110,9 +1133,51 @@ export default function TruthScreen() {
   const { isMobile, doorW, doorH, bridgeH, fLabel, fSub } = sys;
 
   if (phase === "dissolving") {
+    // Crossfade: center door stays at exact ThreeDoors position
+    // Old elements fade out, new elements fade in simultaneously
+    const xEase = xfadeT < 0.5
+      ? 2 * xfadeT * xfadeT
+      : 1 - Math.pow(-2 * xfadeT + 2, 2) / 2;  // ease-in-out
+    const fadeOut = 1 - xEase;
+    const fadeIn2  = xEase;
+    const { doorTopY, sectionGap, centerW: cW, centerH: cH } = getCenterDoor(W, H);
+    const headFS2 = Math.round(W * PHIi6 * PHIi2);
     return (
-      <div style={{ position:"fixed", inset:0, background:"rgba(3,3,10,.95)" }}>
-        <Dissolve W={W} H={H} active={dissolve}/>
+      <div style={{ position:"fixed", inset:0, background:"#03030a", overflow:"hidden" }}>
+        {/* Ambient gold — always visible */}
+        <div style={{
+          position:"absolute", inset:0, pointerEvents:"none",
+          background:`radial-gradient(ellipse at 50% 38%, ${GOLD(O.dim)} 0%, transparent 55%)`,
+        }}/>
+
+        {/* ── OUTGOING: FIND YOUR TRUTH + formula ── */}
+        <div style={{ position:"absolute", inset:0, opacity: fadeOut, display:"flex",
+          flexDirection:"column", alignItems:"center" }}>
+          <div style={{ paddingTop: `${Math.max(4, doorTopY - Math.round(fLabel*PHI*1.4) - bridgeH)}px`,
+            display:"flex", flexDirection:"column", alignItems:"center", gap: bridgeH }}>
+            <div style={{ fontFamily:CINZEL, fontSize:`${Math.round(fLabel*PHI)}px`,
+              letterSpacing:"0.5em", color:GOLD(O.mid), whiteSpace:"nowrap" }}>FIND YOUR TRUTH</div>
+            <div style={{ height: cH }}/>{/* spacer for door */}
+            <Formula sys={sys} t={1}/>
+          </div>
+        </div>
+
+        {/* ── INCOMING: CHOOSE YOUR PATH + side doors + labels ── */}
+        <div style={{ position:"absolute", inset:0, opacity: fadeIn2, display:"flex",
+          flexDirection:"column", alignItems:"center" }}>
+          <ThreeDoors t={fadeIn2} W={W} H={H} hideCenterDoor={true}/>
+        </div>
+
+        {/* ── CENTER DOOR — always visible, never moves ── */}
+        <div style={{
+          position:"absolute",
+          left:"50%", transform:"translateX(-50%)",
+          top: doorTopY,
+          width: cW, height: cH,
+          pointerEvents:"none",
+        }}>
+          <SmallDoor w={cW} h={cH} isCenter={true} onClick={null}/>
+        </div>
       </div>
     );
   }
@@ -1133,8 +1198,10 @@ export default function TruthScreen() {
   // Layout: door area + bridge + formula pinned at bottom
   // Use flexbox with spacer to push formula to bottom
   // Pin FIND YOUR TRUTH close to top — H×PHIi6 breathing room only
-  // Shift everything down slightly
-  const clampedTop = Math.round(H * PHIi6);
+  // Align door y-position to exactly match ThreeDoors center door
+  const { doorTopY } = getCenterDoor(W, H);
+  const fLabelH   = Math.round(fLabel * PHI * 1.4);   // approx label line height
+  const clampedTop = Math.max(4, doorTopY - fLabelH - bridgeH);
 
   // PHI breathing rule
   const minH = sys.minH;
