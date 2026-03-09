@@ -96,17 +96,18 @@ function BackButton({ onClick }) {
 function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
   const W = typeof window !== "undefined" ? window.innerWidth : 800;
   const H = typeof window !== "undefined" ? window.innerHeight : 900;
-  // Dynamic card sizing — 4 rows must fit above fold
+  // Dynamic card sizing — rectangular Egyptian blocks (φ ratio)
   const cardByH = Math.round(H * 0.56 / 4.236);
   const cardByW = Math.round(W / 4.236);
-  const card = Math.round(Math.max(80, Math.min(cardByH, cardByW, 128)));
+  const cardH = Math.round(Math.max(72, Math.min(cardByH, cardByW, 110)));
+  const cardW = Math.round(cardH * 1.618);  // φ ratio — wider than tall
   const gap  = Math.round(Math.max(7, Math.min(11, W / 62)));
   const rowGap = Math.round(gap * 1.1);
-  const emojiSz = Math.round(card * 0.36);
+  const emojiSz = Math.round(cardH * 0.38);
 
   function labelSize(name) {
-    const base = Math.round(card * 0.15);
-    return Math.max(7, Math.round(base * Math.sqrt(6 / Math.max(6, name.length))));
+    const base = Math.round(cardW * 0.10);
+    return Math.max(8, Math.round(base * Math.sqrt(8 / Math.max(8, name.length))));
   }
 
   return (
@@ -131,22 +132,22 @@ function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
               <div key={door.key}
                 onClick={() => onDoorSelect(DOOR_DATA_KEY[door.key])}
                 style={{
-                  width: card, height: card,
+                  width: cardW, height: cardH,
                   display: "flex", flexDirection: "column",
                   alignItems: "center", justifyContent: "center",
-                  gap: Math.round(card * 0.06),
-                  borderRadius: 8,
+                  gap: Math.round(cardH * 0.06),
+                  borderRadius: 6,
                   background: `rgba(${rgb},${bgOp})`,
                   border: `1px solid rgba(${rgb},${borOp})`,
                   boxShadow: isTop
-                    ? `0 0 ${card * 0.38}px rgba(${rgb},0.22), 0 0 ${card * 0.7}px rgba(${rgb},0.07)`
-                    : pct > 20 ? `0 0 ${card * 0.2}px rgba(${rgb},0.09)` : "none",
+                    ? `0 0 ${cardW * 0.24}px rgba(${rgb},0.22), 0 0 ${cardW * 0.45}px rgba(${rgb},0.07)`
+                    : pct > 20 ? `0 0 ${cardW * 0.12}px rgba(${rgb},0.09)` : "none",
                   transition: `all 618ms ${EASE}`,
                   animation: isTop ? "proofPulse 2.618s ease-in-out infinite" : "none",
                   cursor: "pointer",
                   position: "relative",
                   overflow: "visible",
-                  padding: `${Math.round(card * 0.1)}px ${Math.round(card * 0.06)}px`,
+                  padding: `${Math.round(cardH * 0.08)}px ${Math.round(cardW * 0.06)}px`,
                   userSelect: "none",
                 }}
               >
@@ -175,12 +176,12 @@ function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
                   flexShrink: 0,
                 }}>{door.emoji}</div>
 
-                {/* Label */}
+                {/* Label — room to breathe in wider blocks */}
                 <div style={{
                   fontFamily: F.display,
                   fontWeight: 900,
                   fontSize: labelSize(door.name),
-                  letterSpacing: 0,
+                  letterSpacing: "0.04em",
                   color: `rgba(${rgb},${txtOp})`,
                   textAlign: "center",
                   transition: `color 618ms ease`,
@@ -193,7 +194,7 @@ function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
                 {hasScore && pct > 0 && (
                   <div style={{
                     fontFamily: F.body, fontWeight: 300,
-                    fontSize: Math.max(7, Math.round(card * 0.09)),
+                    fontSize: Math.max(7, Math.round(cardH * 0.09)),
                     color: `rgba(${rgb},${Math.max(0.3, pct/100)})`,
                     transition: `color 618ms ease`,
                   }}>{Math.round(pct)}%</div>
@@ -252,22 +253,27 @@ function ResultCard({ result, index, onClick }) {
   );
 }
 
-// ─── NAV LINK ─────────────────────────────────────────────────
+// ─── NAV LINK — True exploration options, not afterthoughts ──
 function NavLink({ label, onClick }) {
   const [h, setH] = useState(false);
   return (
     <button onClick={onClick}
       onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{
-        background: "none",
+        background: h ? `rgba(201,168,76,${A.ghost})` : `rgba(201,168,76,0.04)`,
         border: `1px solid ${GOLD(h ? A.phi : A.ghost)}`,
-        borderRadius: S._3xs,
-        padding: `${S.xs} ${S.md}`,
-        ...DISPLAY_STYLE, fontSize: TEXT.caption,
-        color: GOLD(h ? A.phi : A.ghost),
+        borderRadius: S._2xs,
+        padding: `${S.xs} ${S.lg}`,
+        ...DISPLAY_STYLE,
+        fontSize: TEXT.label,
+        letterSpacing: "0.146em",
+        color: GOLD(h ? A.full : A.phi),
         cursor: "pointer",
         transition: `all 618ms ${EASE}`,
-        boxShadow: h ? boxGlow("201,168,76", 0.236) : "none",
+        boxShadow: h ? boxGlow("201,168,76", A.phi) : `0 0 12px rgba(201,168,76,0.04)`,
+        flex: 1,
+        maxWidth: "14rem",
+        textAlign: "center",
       }}
     >{label}</button>
   );
@@ -352,10 +358,10 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
       <div style={{
         width: "100%", maxWidth: "40rem",
         display: "flex", flexDirection: "column", alignItems: "center",
-        paddingTop: S._2xl, position: "relative", zIndex: 1,
+        paddingTop: S.md, position: "relative", zIndex: 1,
       }}>
 
-        {/* Flower of Life ornament */}
+        {/* Flower of Life ornament — aligned with BACK button */}
         <div style={{ animation: "fadeUp 1s 100ms both ease", marginBottom: S.xs }}>
           <DoorOrnament size={48} alpha={A.phi} />
         </div>
@@ -364,6 +370,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
         <h1 style={{
           ...DISPLAY_STYLE,
           fontSize: TEXT.title,
+          letterSpacing: "0.236em",
           color: GOLD(A.phi),
           textAlign: "center",
           animation: "fadeUp 1s 100ms both ease",
@@ -383,6 +390,16 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
         }}>
           Type anything that matters to you. Watch all ten doors respond.
         </p>
+
+        {/* ── EXPLORE NAVIGATION — prominent, not afterthoughts ── */}
+        <div style={{
+          display: "flex", gap: S.md, width: "100%", justifyContent: "center",
+          animation: "fadeUp 618ms 300ms both ease",
+          marginBottom: S.md,
+        }}>
+          <NavLink label="✦ POEMS" onClick={onPoems} />
+          <NavLink label="✦ MATHEMATICS" onClick={onMath} />
+        </div>
 
         {/* Search input */}
         <div style={{ width: "100%", animation: "fadeUp 618ms 382ms both ease", marginBottom: S.md }}>
@@ -426,11 +443,6 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
           </div>
         )}
 
-        {/* Nav footer */}
-        <div style={{ display: "flex", gap: S.md, animation: "fadeUp 618ms 618ms both ease" }}>
-          <NavLink label="POEMS" onClick={onPoems} />
-          <NavLink label="MATHEMATICS" onClick={onMath} />
-        </div>
       </div>
     </div>
   );
