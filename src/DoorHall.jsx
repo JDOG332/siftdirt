@@ -54,8 +54,8 @@ function SubCard({ sub, rgb, index, onClick }) {
           ? `0 4px 32px rgba(${rgb},0.14), inset 0 0 24px rgba(${rgb},0.04)`
           : `0 1px 8px rgba(0,0,0,0.4)`,
         display: "flex", flexDirection: "column",
+        alignItems: "center",
         gap: S.xs,
-        height: "100%",
         position: "relative",
         overflow: "hidden",
       }}
@@ -67,8 +67,8 @@ function SubCard({ sub, rgb, index, onClick }) {
         transition: `background 382ms ${EASE}`,
       }} />
 
-      {/* Icon + Name — prominent row */}
-      <div style={{ display: "flex", alignItems: "center", gap: S.xs }}>
+      {/* Icon + Name — centered */}
+      <div style={{ display: "flex", alignItems: "center", gap: S.xs, justifyContent: "center" }}>
         <span style={{
           fontSize: TEXT.heading,
           lineHeight: 1,
@@ -88,7 +88,7 @@ function SubCard({ sub, rgb, index, onClick }) {
         }}>{sub.name}</div>
       </div>
 
-      {/* Description — the invitation */}
+      {/* Description — centered */}
       <div style={{
         ...BODY_STYLE,
         fontWeight: 400,
@@ -96,9 +96,10 @@ function SubCard({ sub, rgb, index, onClick }) {
         color: IVORY(hover ? A.full : A.phi),
         transition: `color 382ms ${EASE}`,
         lineHeight: 1.618,
+        textAlign: "center",
       }}>{sub.desc}</div>
 
-      {/* Psi truth bar — subtle but present */}
+      {/* Psi truth bar — centered */}
       <div style={{
         height: 2,
         borderRadius: 1,
@@ -106,6 +107,7 @@ function SubCard({ sub, rgb, index, onClick }) {
         width: `${Math.round(sub.psi * 100)}%`,
         transition: `all 618ms ${EASE}`,
         marginTop: "auto",
+        alignSelf: "center",
       }} />
     </div>
   );
