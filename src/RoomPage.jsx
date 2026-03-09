@@ -291,6 +291,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           color: IVORY(A.full),
           animation: "fadeUp 618ms 236ms both ease",
           textShadow: `0 0 28px rgba(232,228,210,0.12)`,
+          marginTop: S.xs,
         }}>{activeCard.title}</h1>
 
         {/* Subtitle — +2φ */}
@@ -300,6 +301,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
             fontSize: TEXT.title,
             color: `rgba(${rgb},${A.phi})`,
             animation: "fadeUp 618ms 382ms both ease",
+            marginTop: S.xs,
           }}>{activeCard.subtitle}</p>
         )}
 
