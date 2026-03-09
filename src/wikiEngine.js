@@ -241,18 +241,21 @@ function scoreSentences(sentences) {
 
 // ═══════════════════════════════════════════════════════════
 // MAIN: FETCH → SCORE → SIMPLIFY → RETURN
+//
+// THE HACK: Wikipedia already built our "LLM."
+// simple.wikipedia.org = entire encyclopedia rewritten by
+// humans at ~3rd grade reading level. Same API. Same structure.
+// We try SIMPLE first. If no article exists, fall back to
+// regular English Wikipedia + our algorithmic simplification.
 // ═══════════════════════════════════════════════════════════
 
-const API = "https://en.wikipedia.org/w/api.php";
+const SIMPLE_API = "https://simple.wikipedia.org/w/api.php";
+const FULL_API   = "https://en.wikipedia.org/w/api.php";
 
-export async function fetchWiki(query) {
-  if (!query || query.trim().length < 2) return null;
-
-  const keywords = stripStop(tokenize(query));
-  const searchTerm = keywords.length > 0 ? keywords.join(" ") : query.trim();
-
-  // Step 1: Search Wikipedia
-  const searchUrl = new URL(API);
+// Fetch article extract from a specific Wikipedia API endpoint
+async function fetchFromWiki(apiBase, searchTerm) {
+  // Step 1: Search
+  const searchUrl = new URL(apiBase);
   searchUrl.searchParams.set("action", "query");
   searchUrl.searchParams.set("list", "search");
   searchUrl.searchParams.set("srsearch", searchTerm);
@@ -261,13 +264,13 @@ export async function fetchWiki(query) {
   searchUrl.searchParams.set("origin", "*");
 
   const searchRes = await fetch(searchUrl);
-  if (!searchRes.ok) return { title: query, url: null, points: [] };
+  if (!searchRes.ok) return null;
   const searchData = await searchRes.json();
   const title = searchData.query?.search?.[0]?.title;
-  if (!title) return { title: query, url: null, points: [] };
+  if (!title) return null;
 
-  // Step 2: Fetch full article
-  const extractUrl = new URL(API);
+  // Step 2: Fetch full article extract
+  const extractUrl = new URL(apiBase);
   extractUrl.searchParams.set("action", "query");
   extractUrl.searchParams.set("titles", title);
   extractUrl.searchParams.set("prop", "extracts");
@@ -277,19 +280,45 @@ export async function fetchWiki(query) {
   extractUrl.searchParams.set("origin", "*");
 
   const extractRes = await fetch(extractUrl);
-  if (!extractRes.ok) return { title, url: null, points: [] };
+  if (!extractRes.ok) return null;
   const extractData = await extractRes.json();
   const pages = extractData.query?.pages || {};
   const page = Object.values(pages)[0];
   const extract = page?.extract || "";
   const pageId = page?.pageid;
 
-  if (!extract) return { title, url: null, points: [] };
+  if (!extract || extract.length < 100) return null;
 
+  const isSimple = apiBase.includes("simple.");
   const url = pageId
-    ? `https://en.wikipedia.org/?curid=${pageId}`
-    : `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`;
+    ? `https://${isSimple ? "simple" : "en"}.wikipedia.org/?curid=${pageId}`
+    : `https://${isSimple ? "simple" : "en"}.wikipedia.org/wiki/${encodeURIComponent(title)}`;
 
+  return { title, extract, url, isSimple };
+}
+
+export async function fetchWiki(query) {
+  if (!query || query.trim().length < 2) return null;
+
+  const keywords = stripStop(tokenize(query));
+  const searchTerm = keywords.length > 0 ? keywords.join(" ") : query.trim();
+
+  // ── TRY SIMPLE ENGLISH WIKIPEDIA FIRST ──
+  // This is the key insight: simple.wikipedia.org is an entire
+  // encyclopedia already written at 3rd-5th grade level by humans.
+  // No AI needed. The simplification already happened.
+  let result = await fetchFromWiki(SIMPLE_API, searchTerm);
+  let usedSimple = true;
+
+  // ── FALL BACK TO REGULAR ENGLISH ──
+  if (!result) {
+    result = await fetchFromWiki(FULL_API, searchTerm);
+    usedSimple = false;
+  }
+
+  if (!result) return { title: query, url: null, points: [] };
+
+  const { title, extract, url } = result;
   // Step 3: Split into sentences
   const sentences = extract
     .split(/(?<=[.!?])\s+/)
@@ -327,5 +356,5 @@ export async function fetchWiki(query) {
     emoji: pickEmoji(s.simplified, i),
   }));
 
-  return { title, url, points };
+  return { title, url, points, source: usedSimple ? "simple" : "full" };
 }

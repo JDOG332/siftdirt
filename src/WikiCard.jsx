@@ -118,16 +118,22 @@ export default function WikiCard({ label, url, rgb, index = 0 }) {
           {/* Results — emoji bullet points */}
           {data && !loading && data.points && data.points.length > 0 && (
             <>
-              {/* Article title */}
+              {/* Article title + source */}
               {data.title && (
-                <div style={{
-                  ...DISPLAY_STYLE,
-                  fontSize: TEXT.label,
-                  letterSpacing: "0.06em",
-                  color: `rgba(${rgb},${A.phi})`,
-                  textAlign: "center",
-                  marginBottom: S._3xs,
-                }}>{data.title}</div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: S._3xs, marginBottom: S._3xs }}>
+                  <div style={{
+                    ...DISPLAY_STYLE,
+                    fontSize: TEXT.label,
+                    letterSpacing: "0.06em",
+                    color: `rgba(${rgb},${A.phi})`,
+                    textAlign: "center",
+                  }}>{data.title}</div>
+                  <div style={{
+                    ...BODY_STYLE,
+                    fontSize: TEXT.caption,
+                    color: `rgba(${rgb},${A.ghost})`,
+                  }}>{data.source === "simple" ? "Simple English Wikipedia" : "Wikipedia"}</div>
+                </div>
               )}
 
               {/* Bullet points — simplified, ranked by truth (scores hidden) */}
