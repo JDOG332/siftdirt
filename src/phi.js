@@ -42,14 +42,14 @@ export const IVORY = (a) => `rgba(232,228,210,${a})`;
 // ── Easing ──
 export const EASE = "cubic-bezier(0.23,1,0.32,1)";
 
-// ── Responsive Text Sizes (clamp-based, φ-derived vmin midpoints) ──
+// ── Responsive Text Sizes — ALL SHIFTED UP ONE φ LEVEL for accessibility ──
 export const TEXT = {
-  hero:    "clamp(28px, 6.854vmin, 48px)",    // φ⁴ vmin — page titles
-  title:   "clamp(22px, 4.236vmin, 36px)",    // φ³ vmin — section heads
-  heading: "clamp(18px, 2.618vmin, 28px)",    // φ² vmin — sub-headings
-  body:    "clamp(15px, 1.618vmin, 22px)",    // φ¹ vmin — body copy
-  label:   "clamp(11px, 1.000vmin, 16px)",    // φ⁰ vmin — labels
-  caption: "clamp(9px,  0.618vmin, 13px)",    // φ⁻¹ vmin — captions/tags
+  hero:    "clamp(36px, 11.09vmin, 62px)",    // φ⁵ vmin — page titles (was 28-48)
+  title:   "clamp(28px, 6.854vmin, 48px)",    // φ⁴ vmin — section heads (was 22-36)
+  heading: "clamp(22px, 4.236vmin, 36px)",    // φ³ vmin — sub-headings (was 18-28)
+  body:    "clamp(18px, 2.618vmin, 28px)",    // φ² vmin — body copy (was 15-22)
+  label:   "clamp(15px, 1.618vmin, 22px)",    // φ¹ vmin — labels (was 11-16)
+  caption: "clamp(11px, 1.000vmin, 16px)",    // φ⁰ vmin — captions (was 9-13)
 };
 
 // ── Text Styles (with responsive sizing built in) ──
