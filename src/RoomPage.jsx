@@ -366,7 +366,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
 
         {/* ── FIVE SENSES ── */}
         {hasSenses && (
-          <Section title="FIVE SENSES" rgb={rgb} delay={618}>
+          <Section title="SIX SENSES" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
               {activeCard.senses.map((s, i) => (
                 <SenseCard key={s.sense || i} sense={s} rgb={rgb} index={i} />
