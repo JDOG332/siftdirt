@@ -528,7 +528,13 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
               transition: `all 618ms ${EASE}`,
               boxShadow: query ? `0 0 24px rgba(201,168,76,0.08), inset 0 0 12px rgba(201,168,76,0.02)` : "none",
             }}
-            onFocus={(e) => e.target.style.borderColor = GOLD(A.phi)}
+            onFocus={(e) => {
+              e.target.style.borderColor = GOLD(A.phi);
+              // Snap search to top so results fill the screen as you type
+              setTimeout(() => {
+                e.target.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 100);
+            }}
             onBlur={(e) => e.target.style.borderColor = GOLD(A.ghost)}
           />
         </div>
