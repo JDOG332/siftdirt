@@ -145,10 +145,10 @@ function SongRow({ song, rgb }) {
     <div>
       <div onClick={() => setOpen(o => !o)} style={{
         display: "flex", alignItems: "center", gap: S._2xs, cursor: "pointer",
-        padding: `${S._2xs} 0`, borderBottom: `1px solid rgba(${rgb},${A.ghost})`,
+        padding: `${S.xs} 0`, borderBottom: `1px solid rgba(${rgb},${A.phi})`,
       }}>
-        <span style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(open ? A.phi : A.ghost), flex: 1 }}>♪ {song.title}</span>
-        <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost) }}>{song.artist}</span>
+        <span style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(open ? A.full : A.phi), flex: 1 }}>♪ {song.title}</span>
+        <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.phi) }}>{song.artist}</span>
       </div>
       {open && (
         <div style={{ display: "flex", gap: S._2xs, padding: `${S._2xs} 0`, flexWrap: "wrap", animation: "fadeIn 382ms ease" }}>
