@@ -130,7 +130,7 @@ export default function WikiCard({ label, url, rgb, index = 0 }) {
                 }}>{data.title}</div>
               )}
 
-              {/* Bullet points — the Ψ-scored highlights */}
+              {/* Bullet points — simplified, ranked by truth (scores hidden) */}
               <div style={{ display: "flex", flexDirection: "column", gap: S._2xs }}>
                 {data.points.map((point, i) => (
                   <div key={i} style={{
@@ -153,13 +153,6 @@ export default function WikiCard({ label, url, rgb, index = 0 }) {
                       lineHeight: 1.618,
                       flex: 1,
                     }}>{point.text}</div>
-                    <span style={{
-                      ...DISPLAY_STYLE,
-                      fontSize: TEXT.caption,
-                      color: `rgba(${rgb},${A.ghost})`,
-                      flexShrink: 0,
-                      marginTop: S._3xs,
-                    }}>{point.truthScore}%</span>
                   </div>
                 ))}
               </div>
