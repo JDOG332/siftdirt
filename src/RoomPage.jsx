@@ -284,7 +284,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
 
   const hasSenses = activeCard.senses?.length > 0;
   const hasSongs = activeCard.songs?.length > 0;
-  const hasWiki = activeCard.wiki?.length > 0;
+  const hasLinks = activeCard.links?.length > 0;
 
   return (
     <div style={{
@@ -345,7 +345,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           animation: "fadeUp 618ms 236ms both ease",
           textShadow: `0 0 28px rgba(232,228,210,0.12)`,
           marginTop: S.xs,
-        }}>{activeCard.title}</h1>
+        }}>{activeCard.icon} {activeCard.title}</h1>
 
         {/* Subtitle — +2φ */}
         {activeCard.subtitle && (
@@ -421,12 +421,42 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           </Section>
         )}
 
-        {/* ── EXPLORE FURTHER ── */}
-        {hasWiki && (
+        {/* ── EXPLORE FURTHER — Wikipedia links ── */}
+        {hasLinks && (
           <Section title="EXPLORE FURTHER" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
-              {activeCard.wiki.map((topic, i) => (
-                <WikiSummary key={topic} topic={topic} rgb={rgb} index={i} />
+              {activeCard.links.map((link, i) => (
+                <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display: "flex", alignItems: "center", gap: S.xs,
+                    padding: `${S.xs} ${S.sm}`,
+                    background: `rgba(${rgb},0.04)`,
+                    border: `1px solid rgba(${rgb},${A.ghost})`,
+                    borderRadius: S._3xs,
+                    textDecoration: "none",
+                    transition: `all 382ms ${EASE}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = `rgba(${rgb},${A.ghost})`;
+                    e.currentTarget.style.borderColor = `rgba(${rgb},${A.phi})`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = `rgba(${rgb},0.04)`;
+                    e.currentTarget.style.borderColor = `rgba(${rgb},${A.ghost})`;
+                  }}
+                >
+                  <span style={{ fontSize: TEXT.body }}>📖</span>
+                  <span style={{
+                    ...BODY_STYLE, fontWeight: 400,
+                    fontSize: TEXT.body,
+                    color: `rgba(${rgb},${A.phi})`,
+                    flex: 1,
+                  }}>{link.label}</span>
+                  <span style={{
+                    ...DISPLAY_STYLE, fontSize: TEXT.caption,
+                    color: `rgba(${rgb},${A.ghost})`,
+                  }}>→</span>
+                </a>
               ))}
             </div>
           </Section>
