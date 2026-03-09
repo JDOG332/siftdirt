@@ -377,7 +377,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
 
         {/* ── LISTEN ── */}
         {hasSongs && (
-          <Section title="LISTEN" rgb={rgb} delay={618}>
+          <Section title="MUSIC" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {activeCard.songs.map((s, i) => (
                 <SongRow key={i} song={s} rgb={rgb} />
