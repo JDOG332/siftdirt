@@ -468,7 +468,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
         {/* Title */}
         <h1 style={{
           ...DISPLAY_STYLE,
-          fontSize: TEXT.title,
+          fontSize: TEXT.heading,
           letterSpacing: "0.236em",
           color: GOLD(A.phi),
           textAlign: "center",
