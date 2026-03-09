@@ -1,10 +1,17 @@
 /**
- * DOOR HALL — The 10 rooms inside each door
- * Each card is an invitation, not a data row
+ * DOOR HALL — Nesting Dolls
+ *
+ * Level 1: 10 subcategory cards (expandable)
+ * Level 2: Topic cards inside each subcategory (expandable)
+ * Level 3: Content inside each topic card (simple, deeper, senses, music, wiki)
+ *
+ * Browse everything from one page. No back buttons needed.
  */
 
 import React, { useState } from "react";
 import { SUBCATEGORIES } from "./subcategories.js";
+import { TOPIC_CARDS } from "./topicCards.js";
+import WikiSummary from "./WikiSummary.jsx";
 import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow, boxGlow } from "./phi.js";
 
 export const DOOR_META = {
@@ -33,85 +40,375 @@ const QUESTIONS = {
   ancient:  "What is this awareness that makes all experience possible?",
 };
 
-function SubCard({ sub, rgb, index, onClick }) {
-  const [hover, setHover] = useState(false);
+// ── Utility: split text into 3-sentence paragraphs ───────────
+function splitIntoParagraphs(text, n = 3) {
+  if (!text) return [];
+  const sentences = text.match(/[^.!?]*[.!?]+[\s]*/g);
+  if (!sentences || sentences.length <= n) return [text];
+  const out = [];
+  for (let i = 0; i < sentences.length; i += n)
+    out.push(sentences.slice(i, i + n).join("").trim());
+  return out;
+}
 
+function ParagraphText({ text, style }) {
+  const paragraphs = splitIntoParagraphs(text, 3);
+  if (paragraphs.length <= 1) return <div style={style}>{text}</div>;
   return (
-    <div onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        padding: `${S.md} ${S.md}`,
-        background: hover
-          ? `radial-gradient(ellipse at 50% 38.2%, rgba(${rgb},0.14) 0%, rgba(${rgb},0.06) 100%)`
-          : `rgba(${rgb},0.06)`,
-        border: `1px solid rgba(${rgb},${hover ? 0.55 : A.ghost})`,
-        borderRadius: S._2xs,
-        cursor: "pointer",
-        transition: `all 382ms ${EASE}`,
-        animation: `fadeUp 618ms ${index * 62}ms both ease`,
-        boxShadow: hover
-          ? `0 4px 32px rgba(${rgb},0.14), inset 0 0 24px rgba(${rgb},0.04)`
-          : `0 1px 8px rgba(0,0,0,0.4)`,
-        display: "flex", flexDirection: "column",
-        alignItems: "center",
-        gap: S.xs,
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Top shimmer */}
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 1,
-        background: `linear-gradient(90deg, transparent, rgba(${rgb},${hover ? A.phi : A.ghost}), transparent)`,
-        transition: `background 382ms ${EASE}`,
-      }} />
-
-      {/* Icon + Name — centered */}
-      <div style={{ display: "flex", alignItems: "center", gap: S.xs, justifyContent: "center" }}>
-        <span style={{
-          fontSize: TEXT.heading,
-          lineHeight: 1,
-          flexShrink: 0,
-          filter: hover ? `drop-shadow(0 0 8px rgba(${rgb},0.4))` : "none",
-          transition: `filter 382ms ${EASE}`,
-        }}>{sub.icon}</span>
-        <div style={{
-          fontFamily: F.display,
-          fontWeight: 900,
-          fontSize: TEXT.heading,
-          letterSpacing: "0.06em",
-          lineHeight: 1.1,
-          color: `rgba(${rgb},${hover ? A.full : A.phi})`,
-          textShadow: hover ? textGlow(rgb, A.phi) : "none",
-          transition: `all 382ms ${EASE}`,
-        }}>{sub.name}</div>
-      </div>
-
-      {/* Description — centered */}
-      <div style={{
-        ...BODY_STYLE,
-        fontWeight: 400,
-        fontSize: TEXT.body,
-        color: IVORY(hover ? A.full : A.phi),
-        transition: `color 382ms ${EASE}`,
-        lineHeight: 1.618,
-        textAlign: "center",
-      }}>{sub.desc}</div>
-
-      {/* Psi truth bar — centered */}
-      <div style={{
-        height: 2,
-        borderRadius: 1,
-        background: `rgba(${rgb},${hover ? A.phi : A.ghost})`,
-        width: `${Math.round(sub.psi * 100)}%`,
-        transition: `all 618ms ${EASE}`,
-        marginTop: "auto",
-        alignSelf: "center",
-      }} />
+    <div style={{ display: "flex", flexDirection: "column", gap: S.sm }}>
+      {paragraphs.map((p, i) => <div key={i} style={style}>{p}</div>)}
     </div>
   );
 }
+
+// ── Level 3: Content Section toggle ──────────────────────────
+function ContentSection({ title, rgb, children, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const [hover, setHover] = useState(false);
+  return (
+    <div style={{ width: "100%" }}>
+      <button onClick={() => setOpen(o => !o)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          width: "100%",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: S.sm,
+          background: hover ? `rgba(${rgb},${A.ghost})` : open ? `rgba(${rgb},0.08)` : `rgba(${rgb},0.04)`,
+          border: `1px solid rgba(${rgb},${hover ? A.phi : A.ghost})`,
+          borderRadius: open ? `${S._2xs} ${S._2xs} 0 0` : S._2xs,
+          cursor: "pointer",
+          padding: `${S.xs} ${S.sm}`,
+          transition: `all 382ms ${EASE}`,
+        }}
+      >
+        <span style={{
+          ...DISPLAY_STYLE, fontSize: TEXT.label,
+          letterSpacing: "0.146em",
+          color: `rgba(${rgb},${hover ? A.full : A.phi})`,
+        }}>{title}</span>
+        <span style={{
+          fontSize: TEXT.label,
+          color: `rgba(${rgb},${hover ? A.full : A.phi})`,
+          transition: `all 382ms ${EASE}`,
+          transform: open ? "rotate(180deg)" : "none",
+          display: "inline-block",
+        }}>▾</span>
+      </button>
+      {open && (
+        <div style={{
+          padding: S.sm,
+          background: `rgba(${rgb},0.03)`,
+          border: `1px solid rgba(${rgb},${A.ghost})`,
+          borderTop: "none",
+          borderRadius: `0 0 ${S._2xs} ${S._2xs}`,
+          animation: "fadeIn 382ms ease",
+        }}>{children}</div>
+      )}
+    </div>
+  );
+}
+
+// ── Level 3: Sense Card ──────────────────────────────────────
+function SenseCard({ sense, rgb }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div onClick={() => setOpen(o => !o)} style={{
+      padding: open ? `${S.sm} ${S.sm}` : `${S.xs} ${S.xs}`,
+      background: open ? `rgba(${rgb},0.08)` : `rgba(${rgb},0.03)`,
+      border: `1px solid rgba(${rgb},${open ? A.phi : A.ghost})`,
+      borderRadius: S._3xs, cursor: "pointer",
+      transition: `all 382ms ${EASE}`,
+      display: "flex", flexDirection: "column", gap: S._2xs,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: S._2xs }}>
+        <span style={{ fontSize: TEXT.body, lineHeight: 1 }}>{sense.icon}</span>
+        <span style={{ ...DISPLAY_STYLE, fontSize: TEXT.label, letterSpacing: "0.06em", color: `rgba(${rgb},${open ? A.full : A.phi})` }}>{sense.sense}</span>
+        <span style={{ marginLeft: "auto", fontSize: TEXT.label, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transform: open ? "rotate(90deg)" : "none", display: "inline-block", transition: `all 382ms ${EASE}` }}>▶</span>
+      </div>
+      {open && <div style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(A.phi), paddingTop: S._2xs, borderTop: `1px solid rgba(${rgb},${A.ghost})`, animation: "fadeIn 382ms ease" }}>{sense.text}</div>}
+    </div>
+  );
+}
+
+// ── Level 3: Song Row ────────────────────────────────────────
+function SongRow({ song, rgb }) {
+  const [open, setOpen] = useState(false);
+  const q = encodeURIComponent(`${song.title} ${song.artist}`);
+  const links = [
+    { label: "Spotify", url: `https://open.spotify.com/search/${q}` },
+    { label: "YouTube", url: `https://music.youtube.com/search?q=${q}` },
+    { label: "Apple", url: `https://music.apple.com/search?term=${q}` },
+    { label: "Amazon", url: `https://music.amazon.com/search/${q}` },
+  ];
+  return (
+    <div>
+      <div onClick={() => setOpen(o => !o)} style={{
+        display: "flex", alignItems: "center", gap: S._2xs, cursor: "pointer",
+        padding: `${S._2xs} 0`, borderBottom: `1px solid rgba(${rgb},${A.ghost})`,
+      }}>
+        <span style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(open ? A.phi : A.ghost), flex: 1 }}>♪ {song.title}</span>
+        <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost) }}>{song.artist}</span>
+      </div>
+      {open && (
+        <div style={{ display: "flex", gap: S._2xs, padding: `${S._2xs} 0`, flexWrap: "wrap", animation: "fadeIn 382ms ease" }}>
+          {links.map(l => (
+            <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" style={{
+              ...DISPLAY_STYLE, fontSize: TEXT.caption, letterSpacing: "0.06em",
+              color: `rgba(${rgb},${A.phi})`, textDecoration: "none",
+              padding: `${S._3xs} ${S._2xs}`, border: `1px solid rgba(${rgb},${A.ghost})`, borderRadius: S._3xs,
+            }}>{l.label}</a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Level 2: Topic Card (expandable) ─────────────────────────
+function TopicCard({ card, rgb, index }) {
+  const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(false);
+
+  const hasSenses = card.senses?.length > 0;
+  const hasSongs = card.songs?.length > 0;
+  const hasWiki = card.wiki?.length > 0;
+
+  return (
+    <div style={{ width: "100%" }}>
+      {/* Header — always visible */}
+      <button onClick={() => setOpen(o => !o)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          width: "100%",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: S.sm,
+          background: hover
+            ? `rgba(${rgb},${A.ghost})`
+            : open
+              ? `rgba(${rgb},0.10)`
+              : `rgba(${rgb},0.05)`,
+          border: `1px solid rgba(${rgb},${hover ? A.phi : open ? A.ghost : A.ghost})`,
+          borderRadius: open ? `${S._2xs} ${S._2xs} 0 0` : S._2xs,
+          cursor: "pointer",
+          padding: `${S.sm} ${S.md}`,
+          transition: `all 382ms ${EASE}`,
+          boxShadow: hover ? `0 0 18px rgba(${rgb},0.08)` : "none",
+          textAlign: "left",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: S._3xs, flex: 1 }}>
+          <span style={{
+            ...DISPLAY_STYLE, fontSize: TEXT.body,
+            color: IVORY(hover ? A.full : A.phi),
+            transition: `color 382ms ${EASE}`,
+          }}>{card.title}</span>
+          {card.subtitle && (
+            <span style={{
+              ...ACCENT_STYLE, fontSize: TEXT.label,
+              color: `rgba(${rgb},${hover ? A.phi : A.ghost})`,
+              transition: `color 382ms ${EASE}`,
+            }}>{card.subtitle}</span>
+          )}
+        </div>
+        <span style={{
+          fontSize: TEXT.body,
+          color: `rgba(${rgb},${hover ? A.full : A.phi})`,
+          transition: `all 382ms ${EASE}`,
+          transform: open ? "rotate(180deg)" : "none",
+          display: "inline-block",
+          flexShrink: 0,
+        }}>▾</span>
+      </button>
+
+      {/* Expanded content — the full card experience */}
+      {open && (
+        <div style={{
+          padding: `${S.md}`,
+          background: `rgba(${rgb},0.03)`,
+          border: `1px solid rgba(${rgb},${A.ghost})`,
+          borderTop: "none",
+          borderRadius: `0 0 ${S._2xs} ${S._2xs}`,
+          animation: "fadeIn 382ms ease",
+          display: "flex", flexDirection: "column", gap: S.sm,
+        }}>
+          {/* Simple — always shown */}
+          {card.simple && (
+            <ParagraphText text={card.simple} style={{
+              ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(A.phi),
+            }} />
+          )}
+
+          {/* GO DEEPER */}
+          {card.intuition && (
+            <ContentSection title="GO DEEPER" rgb={rgb}>
+              <ParagraphText text={card.intuition} style={{
+                ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(A.phi),
+              }} />
+            </ContentSection>
+          )}
+
+          {/* THE FULL PICTURE */}
+          {card.advanced && (
+            <ContentSection title="THE FULL PICTURE" rgb={rgb}>
+              <ParagraphText text={card.advanced} style={{
+                ...BODY_STYLE, fontWeight: 300, fontSize: TEXT.body, color: IVORY(A.phi),
+              }} />
+            </ContentSection>
+          )}
+
+          {/* SIX SENSES */}
+          {hasSenses && (
+            <ContentSection title="SIX SENSES" rgb={rgb}>
+              <div style={{ display: "flex", flexDirection: "column", gap: S._2xs }}>
+                {card.senses.map((s, i) => <SenseCard key={s.sense || i} sense={s} rgb={rgb} />)}
+              </div>
+            </ContentSection>
+          )}
+
+          {/* MUSIC */}
+          {hasSongs && (
+            <ContentSection title="MUSIC" rgb={rgb}>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {card.songs.map((s, i) => <SongRow key={i} song={s} rgb={rgb} />)}
+              </div>
+            </ContentSection>
+          )}
+
+          {/* EXPLORE FURTHER */}
+          {hasWiki && (
+            <ContentSection title="EXPLORE FURTHER" rgb={rgb}>
+              <div style={{ display: "flex", flexDirection: "column", gap: S._2xs }}>
+                {card.wiki.map((topic, i) => <WikiSummary key={topic} topic={topic} rgb={rgb} index={i} />)}
+              </div>
+            </ContentSection>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Level 1: Subcategory Card (expandable) ───────────────────
+function SubCard({ sub, rgb, index, doorKey }) {
+  const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(false);
+  const cards = TOPIC_CARDS[doorKey]?.[sub.id] || [];
+
+  return (
+    <div style={{ width: "100%" }}>
+      {/* Header — the invitation */}
+      <button onClick={() => setOpen(o => !o)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          width: "100%",
+          padding: `${S.md} ${S.md}`,
+          background: hover
+            ? `radial-gradient(ellipse at 50% 50%, rgba(${rgb},0.14) 0%, rgba(${rgb},0.06) 100%)`
+            : open
+              ? `rgba(${rgb},0.10)`
+              : `rgba(${rgb},0.06)`,
+          border: `1px solid rgba(${rgb},${hover ? 0.55 : open ? A.ghost : A.ghost})`,
+          borderRadius: open ? `${S._2xs} ${S._2xs} 0 0` : S._2xs,
+          cursor: "pointer",
+          transition: `all 382ms ${EASE}`,
+          animation: `fadeUp 618ms ${index * 62}ms both ease`,
+          boxShadow: hover
+            ? `0 4px 32px rgba(${rgb},0.14), inset 0 0 24px rgba(${rgb},0.04)`
+            : `0 1px 8px rgba(0,0,0,0.4)`,
+          display: "flex", flexDirection: "column",
+          alignItems: "center",
+          gap: S.xs,
+          position: "relative",
+          overflow: "hidden",
+          textAlign: "center",
+        }}
+      >
+        {/* Top shimmer */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 1,
+          background: `linear-gradient(90deg, transparent, rgba(${rgb},${hover ? A.phi : A.ghost}), transparent)`,
+          transition: `background 382ms ${EASE}`,
+        }} />
+
+        {/* Icon + Name + Chevron */}
+        <div style={{ display: "flex", alignItems: "center", gap: S.xs, justifyContent: "center", width: "100%" }}>
+          <span style={{
+            fontSize: TEXT.heading, lineHeight: 1, flexShrink: 0,
+            filter: hover ? `drop-shadow(0 0 8px rgba(${rgb},0.4))` : "none",
+            transition: `filter 382ms ${EASE}`,
+          }}>{sub.icon}</span>
+          <span style={{
+            fontFamily: F.display, fontWeight: 900,
+            fontSize: TEXT.heading,
+            letterSpacing: "0.06em", lineHeight: 1.1,
+            color: `rgba(${rgb},${hover ? A.full : A.phi})`,
+            textShadow: hover ? textGlow(rgb, A.phi) : "none",
+            transition: `all 382ms ${EASE}`,
+          }}>{sub.name}</span>
+          <span style={{
+            fontSize: TEXT.body,
+            color: `rgba(${rgb},${hover ? A.full : A.phi})`,
+            transition: `all 382ms ${EASE}`,
+            transform: open ? "rotate(180deg)" : "none",
+            display: "inline-block",
+            flexShrink: 0,
+          }}>▾</span>
+        </div>
+
+        {/* Description */}
+        <div style={{
+          ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body,
+          color: IVORY(hover ? A.full : A.phi),
+          transition: `color 382ms ${EASE}`,
+          lineHeight: 1.618,
+        }}>{sub.desc}</div>
+
+        {/* Psi bar */}
+        <div style={{
+          height: 2, borderRadius: 1,
+          background: `rgba(${rgb},${hover ? A.phi : A.ghost})`,
+          width: `${Math.round(sub.psi * 100)}%`,
+          transition: `all 618ms ${EASE}`,
+          alignSelf: "center",
+        }} />
+      </button>
+
+      {/* Expanded: topic cards inside */}
+      {open && (
+        <div style={{
+          padding: `${S.sm}`,
+          background: `rgba(${rgb},0.02)`,
+          border: `1px solid rgba(${rgb},${A.ghost})`,
+          borderTop: "none",
+          borderRadius: `0 0 ${S._2xs} ${S._2xs}`,
+          animation: "fadeIn 382ms ease",
+          display: "flex", flexDirection: "column",
+          gap: S.xs,
+        }}>
+          {/* Card count */}
+          <div style={{
+            ...DISPLAY_STYLE, fontSize: TEXT.caption,
+            letterSpacing: "0.146em",
+            color: `rgba(${rgb},${A.ghost})`,
+            textAlign: "center",
+          }}>{cards.length} TOPICS</div>
+
+          {/* Topic cards */}
+          {cards.map((card, i) => (
+            <TopicCard key={card.id} card={card} rgb={rgb} index={i} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DOOR HALL
+// ═══════════════════════════════════════════════════════════════
 
 export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
   const meta = DOOR_META[doorKey];
@@ -146,8 +443,7 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
         style={{
           position: "fixed", top: S.md, left: S.md, zIndex: 99,
           background: "none", border: "none", cursor: "pointer",
-          ...DISPLAY_STYLE,
-          fontSize: TEXT.body,
+          ...DISPLAY_STYLE, fontSize: TEXT.body,
           color: `rgba(${rgb},${backH ? A.full : A.phi})`,
           transition: `color 618ms ${EASE}`,
           padding: `${S.xs} ${S.sm}`,
@@ -164,8 +460,7 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
 
         {/* Door label */}
         <div style={{
-          ...DISPLAY_STYLE,
-          fontSize: TEXT.heading,
+          ...DISPLAY_STYLE, fontSize: TEXT.heading,
           letterSpacing: "0.236em",
           color: `rgba(${rgb},${A.phi})`,
           marginBottom: S.xs,
@@ -174,11 +469,9 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
 
         {/* Core question */}
         <h1 style={{
-          ...ACCENT_STYLE,
-          fontSize: TEXT.title,
+          ...ACCENT_STYLE, fontSize: TEXT.title,
           color: IVORY(A.phi),
-          textAlign: "center",
-          lineHeight: 1.618,
+          textAlign: "center", lineHeight: 1.618,
           maxWidth: "36rem",
           marginBottom: S.sm,
           textShadow: `0 0 30px rgba(232,228,210,0.18), 0 0 60px rgba(232,228,210,0.08)`,
@@ -193,13 +486,11 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
           animation: "fadeUp 1s 382ms both ease",
         }} />
 
-        {/* 10 subcategory cards — 2-column grid */}
+        {/* 10 subcategory nesting dolls */}
         <div style={{
           width: "100%",
-          display: "grid",
-          gridTemplateColumns: "1fr",
+          display: "flex", flexDirection: "column",
           gap: S.sm,
-          alignItems: "stretch",
         }}>
           {subs.map((sub, i) => (
             <SubCard
@@ -207,7 +498,7 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
               sub={sub}
               rgb={rgb}
               index={i}
-              onClick={() => onRoomSelect(doorKey, sub.id)}
+              doorKey={doorKey}
             />
           ))}
         </div>
