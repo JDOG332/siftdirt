@@ -507,8 +507,8 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
           />
         </div>
 
-        {/* ── SEARCH — the tool that activates the temple ── */}
-        <div style={{ width: "100%", animation: "fadeUp 618ms 618ms both ease", marginBottom: S.md }}>
+        {/* ── SEARCH — snaps to top when focused ── */}
+        <div id="search-anchor" style={{ width: "100%", animation: "fadeUp 618ms 618ms both ease", marginBottom: S.md }}>
           <input ref={inputRef} value={query} onChange={handleInput}
             placeholder="What are you searching for?"
             spellCheck={false}
@@ -527,13 +527,14 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
             }}
             onFocus={(e) => {
               e.target.style.borderColor = GOLD(A.phi);
-              // Snap search to top so pyramid + results fill the screen below
-              setTimeout(() => {
-                const rect = e.target.getBoundingClientRect();
-                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                // Position input 1rem from top of viewport
-                window.scrollTo({ top: scrollTop + rect.top - 16, behavior: "smooth" });
-              }, 50);
+              // SNAP: force the search bar to the very top of the viewport
+              requestAnimationFrame(() => {
+                const el = document.getElementById("search-anchor");
+                if (el) {
+                  const top = el.getBoundingClientRect().top + window.scrollY - 8;
+                  window.scrollTo({ top, behavior: "smooth" });
+                }
+              });
             }}
             onBlur={(e) => e.target.style.borderColor = GOLD(A.ghost)}
           />
