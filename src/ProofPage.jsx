@@ -392,6 +392,8 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
 
+  const [searchFocused, setSearchFocused] = useState(false);
+
   // No auto-focus — let the user see the temple first, then click to search
 
   const runSearch = useCallback((q) => {
@@ -527,14 +529,15 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
             }}
             onFocus={(e) => {
               e.target.style.borderColor = GOLD(A.phi);
-              // SNAP: force the search bar to the very top of the viewport
-              requestAnimationFrame(() => {
+              // Create space FIRST, then snap
+              setSearchFocused(true);
+              setTimeout(() => {
                 const el = document.getElementById("search-anchor");
                 if (el) {
                   const top = el.getBoundingClientRect().top + window.scrollY - 8;
                   window.scrollTo({ top, behavior: "instant" });
                 }
-              });
+              }, 50);
             }}
             onBlur={(e) => e.target.style.borderColor = GOLD(A.ghost)}
           />
@@ -552,6 +555,11 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
                     onClick={() => handleResultClick(r)} />
             ))}
           </div>
+        )}
+
+        {/* Expansion spacer — creates scroll room when search is focused */}
+        {searchFocused && (
+          <div style={{ minHeight: "100vh", pointerEvents: "none" }} />
         )}
 
       </div>
