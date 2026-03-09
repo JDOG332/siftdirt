@@ -392,10 +392,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
 
-  useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 618);
-    return () => clearTimeout(t);
-  }, []);
+  // No auto-focus — let the user see the temple first, then click to search
 
   const runSearch = useCallback((q) => {
     if (!q || q.trim().length < 2) {
