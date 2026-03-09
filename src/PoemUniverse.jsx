@@ -31,7 +31,7 @@ function BackButton({ onBack }) {
         background:"none",
         border:"none",
         color: hover ? GOLD(1.0) : GOLD(0.72),
-        fontFamily: CINZEL, fontSize:16, fontWeight:600,
+        fontFamily: CINZEL, fontSize:"clamp(15px, 1.618vmin, 22px)", fontWeight:600,
         letterSpacing:"0.38em", padding:"10px 16px",
         cursor:"pointer", transition:"color 618ms ease",
       }}

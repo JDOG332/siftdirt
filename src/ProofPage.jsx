@@ -82,7 +82,7 @@ function BackButton({ onClick }) {
         position: "fixed", top: S.md, left: S.md, zIndex: 999,
         background: "none", border: "none", cursor: "pointer",
         ...DISPLAY_STYLE,
-        fontSize: TEXT.label,
+        fontSize: TEXT.body,
         color: GOLD(h ? A.full : A.phi),
         transition: `color 618ms ${EASE}`,
         padding: `${S.xs} ${S.sm}`,

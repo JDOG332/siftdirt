@@ -43,7 +43,7 @@ export default function PaperPage({ onBack }) {
       <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
         position: "fixed", top: S.md, left: S.md, zIndex: 99,
         background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE, fontSize: TEXT.label,
+        ...DISPLAY_STYLE, fontSize: TEXT.body,
         color: GOLD(backH ? A.full : A.phi),
         transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
       }}>← BACK</button>
