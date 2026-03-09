@@ -109,6 +109,15 @@ export default function App() {
       />
     );
 
+  /* ── POEMS (own scene, no shared cursor) ── */
+  if (scene === "poems")
+    return (
+      <PoemsPage
+        onBack={goBack}
+        onSelectPoem={(key) => go(`poem-${key}`)}
+      />
+    );
+
   /* ── SCENES WITH SHARED CURSOR ── */
   return (
     <div style={{ minHeight: "100vh", background: "#03030a" }}>
@@ -117,12 +126,6 @@ export default function App() {
         <IntroCanvas
           seedState={introSeedRef.current}
           onComplete={() => go("proof")}
-        />
-      )}
-      {scene === "poems" && (
-        <PoemsPage
-          onBack={goBack}
-          onSelectPoem={(key) => go(`poem-${key}`)}
         />
       )}
     </div>
