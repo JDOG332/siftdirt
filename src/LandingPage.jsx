@@ -349,7 +349,7 @@ export default function LandingPage({ onStart }) {
           className="foot-glow"
           style={{
             fontFamily: "'Cinzel', serif",
-            fontSize: "clamp(18px, 2.6vmin, 26px)",
+            fontSize: "clamp(22px, 4.236vmin, 36px)",
             letterSpacing: "0.55em",
             fontWeight: 600,
             color: "rgba(201,168,76,0.88)",
