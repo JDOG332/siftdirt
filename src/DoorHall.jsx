@@ -206,8 +206,8 @@ function TopicCard({ card, rgb, index }) {
           }}>{card.icon} {card.title}</span>
           {card.subtitle && (
             <span style={{
-              ...ACCENT_STYLE, fontSize: TEXT.label,
-              color: `rgba(${rgb},${hover ? A.phi : A.ghost})`,
+              ...ACCENT_STYLE, fontSize: TEXT.body,
+              color: `rgba(${rgb},${hover ? A.full : A.phi})`,
               transition: `color 382ms ${EASE}`,
             }}>{card.subtitle}</span>
           )}
