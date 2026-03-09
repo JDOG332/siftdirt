@@ -1,40 +1,40 @@
 /* ═══════════════════════════════════════════════════════════════
-   SIFTDIRT — PHI DESIGN SYSTEM
-   Every value derived from φ = 1.618033988749895
+   SIFTDIRT — Φ DESIGN SYSTEM
+   Golden Ratio (φ ≈ 1.618) as the sole truth source.
+   Every dimension = U × φ^n or U / φ^n.
+   NO arbitrary numbers.
    ═══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400&family=Cormorant+Garamond:ital,wght@1,300;1,400&display=swap');
 
 :root {
-  --phi: 1.618033988749895;
+  /* The Constant */
+  --phi: 1.61803398875;
 
-  /* PHI Spacing Scale */
+  /* Spacing & Sizing (Logarithmic Scale) */
   --s-3xs: 0.236rem;
   --s-2xs: 0.382rem;
   --s-xs:  0.618rem;
-  --s-sm:  1rem;
+  --s-sm:  1.000rem;
   --s-md:  1.618rem;
   --s-lg:  2.618rem;
   --s-xl:  4.236rem;
   --s-2xl: 6.854rem;
 
-  /* Colors — Cosmos */
-  --void:   #03030a;
-  --gold:   rgba(201, 168, 76, 1);
-  --ivory:  rgba(232, 228, 210, 1);
-  --ghost:  rgba(232, 228, 210, 0.236);
-
-  /* Opacity Hierarchy */
+  /* Opacity — THREE LEVELS ONLY */
   --a-full:  1.0;
   --a-phi:   0.618;
-  --a-dim:   0.382;
   --a-ghost: 0.236;
-  --a-whisp: 0.146;
-  --a-trace: 0.090;
 
   /* Typography */
-  --f-display: 'Cinzel', serif;
-  --f-body:    'Cormorant Garamond', serif;
+  --f-display: 'Playfair Display', serif;
+  --f-body:    'Inter', sans-serif;
+  --f-accent:  'Cormorant Garamond', serif;
+
+  /* Colors — Dark Cosmos (preserving Vitruvian canvas compatibility) */
+  --void:  #03030a;
+  --gold:  #c9a84c;
+  --ivory: #e8e4d2;
 }
 
 *, *::before, *::after {
@@ -54,11 +54,11 @@ html {
 body {
   height: 100%;
   background: var(--void);
-  color: rgba(232, 228, 210, 0.90);
+  color: rgba(232, 228, 210, var(--a-phi));
   font-family: var(--f-body);
-  font-weight: 400;
-  font-size: 1rem;
-  line-height: 1.618;
+  font-weight: 300;
+  font-size: var(--s-sm);
+  line-height: var(--phi);
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -69,25 +69,22 @@ body {
 }
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: var(--s-3xs); }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(201, 168, 76, 0.236);
-  border-radius: 2px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(201, 168, 76, 0.382);
+  background: rgba(201, 168, 76, var(--a-ghost));
+  border-radius: var(--s-3xs);
 }
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(201, 168, 76, 0.236);
-  color: rgba(232, 228, 210, 1);
+  background: rgba(201, 168, 76, var(--a-ghost));
+  color: rgba(232, 228, 210, var(--a-full));
 }
 
-/* ── Shared Keyframes ── */
+/* ── Keyframes ── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(1.618rem); }
+  from { opacity: 0; transform: translateY(var(--s-md)); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -97,20 +94,15 @@ body {
 }
 
 @keyframes breathe {
-  0%, 100% { opacity: 0.382; }
-  50%      { opacity: 0.618; }
-}
-
-@keyframes shimmer {
-  0%   { background-position: 200% center; }
-  100% { background-position: -200% center; }
+  0%, 100% { opacity: var(--a-ghost); }
+  50%      { opacity: var(--a-phi); }
 }
 
 @keyframes goldPulse {
   0%, 100% {
-    text-shadow: 0 0 8px rgba(201,168,76,0.45), 0 0 24px rgba(201,168,76,0.18);
+    text-shadow: 0 0 var(--s-xs) rgba(201,168,76,0.618), 0 0 var(--s-md) rgba(201,168,76,0.236);
   }
   50% {
-    text-shadow: 0 0 14px rgba(201,168,76,0.72), 0 0 40px rgba(201,168,76,0.28);
+    text-shadow: 0 0 var(--s-sm) rgba(201,168,76,0.618), 0 0 var(--s-lg) rgba(201,168,76,0.236);
   }
 }
