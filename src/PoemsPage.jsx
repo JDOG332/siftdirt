@@ -113,11 +113,11 @@ export default function PoemsPage({ onBack, onSelectPoem }) {
         {/* Title */}
         <h1 style={{
           ...DISPLAY_STYLE,
-          fontSize: TEXT.hero,
+          fontSize: TEXT.heading,
           letterSpacing: "0.236em",
           color: GOLD(A.phi),
           animation: "fadeUp 618ms 100ms both ease",
-          textShadow: textGlow("201,168,76", A.phi),
+          textShadow: textGlow("201,168,76", 0.618),
           marginBottom: S.xs,
         }}>POEMS</h1>
 
