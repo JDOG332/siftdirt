@@ -47,7 +47,7 @@ function PoemCard({ poem, index, onSelect }) {
       {/* Title — the invitation */}
       <h2 style={{
         ...ACCENT_STYLE,
-        fontSize: TEXT.title,
+        fontSize: TEXT.hero,
         color: IVORY(hover ? A.full : A.phi),
         transition: `all 618ms ${EASE}`,
         textShadow: hover ? textGlow(rgb, A.phi) : `0 0 18px rgba(${rgb},${A.ghost})`,
@@ -59,7 +59,7 @@ function PoemCard({ poem, index, onSelect }) {
       <p style={{
         ...BODY_STYLE,
         fontWeight: 400,
-        fontSize: TEXT.label,
+        fontSize: TEXT.body,
         color: `rgba(${rgb},${hover ? A.full : A.phi})`,
         transition: `color 618ms ${EASE}`,
         maxWidth: "24rem",
@@ -86,7 +86,7 @@ export default function PoemsPage({ onBack, onSelectPoem }) {
       background: `radial-gradient(ellipse at 50% 23.6%, rgba(14,10,28,${A.phi}) 0%, #03030a 61.8%)`,
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center",
-      padding: `${S.lg} ${S.md}`,
+      padding: `${S.md} ${S.md}`,
     }}>
       {/* Back */}
       <button onClick={onBack}
