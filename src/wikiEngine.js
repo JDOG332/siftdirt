@@ -85,6 +85,9 @@ function simplifyText(text, maxWords = 20) {
   // Strip parenthetical content: "(also known as foo)" "(Latin: bar)" "(c. 1450)"
   s = s.replace(/\s*\([^)]*\)/g, "");
 
+  // Strip Wikipedia section headers: === Title === or == Title ==
+  s = s.replace(/={2,}\s*[^=]+\s*={2,}\s*/g, "");
+
   // Strip square bracket references: [1] [citation needed]
   s = s.replace(/\s*\[[^\]]*\]/g, "");
 
@@ -231,7 +234,7 @@ function scoreSentences(sentences) {
 
     scored.push({
       originalText: sent.text,
-      simplified: simplifyText(sent.text, 20),
+      simplified: simplifyText(sent.text, 30),
       score: combined,
     });
   }
