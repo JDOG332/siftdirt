@@ -72,6 +72,7 @@ function SongRow({ song, rgb }) {
     { label: "Spotify", url: `https://open.spotify.com/search/${q}` },
     { label: "YouTube", url: `https://music.youtube.com/search?q=${q}` },
     { label: "Apple", url: `https://music.apple.com/search?term=${q}` },
+    { label: "Amazon", url: `https://music.amazon.com/search/${q}` },
   ];
   return (
     <div>
