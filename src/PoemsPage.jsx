@@ -17,7 +17,7 @@ function PoemCard({ poem, index, onSelect }) {
       onMouseLeave={() => setHover(false)}
       style={{
         width: "100%",
-        padding: `${S.xl} ${S.lg}`,
+        padding: `${S.lg} ${S.lg}`,
         background: hover
           ? `radial-gradient(ellipse at 50% 50%, rgba(${rgb},0.12) 0%, rgba(${rgb},0.03) 61.8%)`
           : `radial-gradient(ellipse at 50% 50%, rgba(${rgb},0.06) 0%, rgba(${rgb},0.01) 61.8%)`,
@@ -60,7 +60,7 @@ function PoemCard({ poem, index, onSelect }) {
         ...BODY_STYLE,
         fontWeight: 400,
         fontSize: TEXT.label,
-        color: `rgba(${rgb},${hover ? A.phi : A.ghost})`,
+        color: `rgba(${rgb},${hover ? A.full : A.phi})`,
         transition: `color 618ms ${EASE}`,
         maxWidth: "24rem",
       }}>
