@@ -452,6 +452,7 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
   return (
     <div style={{
       minHeight: "100vh",
+      position: "relative",
       background: `radial-gradient(ellipse at 50% 15%, rgba(${rgb},0.06) 0%, #03030a 55%)`,
       color: IVORY(A.phi),
       display: "flex", flexDirection: "column", alignItems: "center",
@@ -473,7 +474,7 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
         onMouseEnter={() => setBackH(true)}
         onMouseLeave={() => setBackH(false)}
         style={{
-          position: "fixed", top: S.md, left: S.md, zIndex: 99,
+          position: "absolute", top: S.md, left: S.md, zIndex: 99,
           background: "none", border: "none", cursor: "pointer",
           ...DISPLAY_STYLE, fontSize: TEXT.body,
           color: `rgba(${rgb},${backH ? A.full : A.phi})`,

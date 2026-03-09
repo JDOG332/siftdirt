@@ -289,6 +289,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
   return (
     <div style={{
       minHeight: "100vh",
+      position: "relative",
       background: `radial-gradient(ellipse at 50% 8%, rgba(${rgb},0.05) 0%, #03030a 50%)`,
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: `0 ${S.md}`,
@@ -309,7 +310,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
         onMouseEnter={() => setBackH(true)}
         onMouseLeave={() => setBackH(false)}
         style={{
-          position: "fixed", top: S.md, left: S.md, zIndex: 99,
+          position: "absolute", top: S.md, left: S.md, zIndex: 99,
           background: "none", border: "none", cursor: "pointer",
           ...DISPLAY_STYLE,
           fontSize: TEXT.body,

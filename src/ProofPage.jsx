@@ -79,7 +79,7 @@ function BackButton({ onClick }) {
       onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       className="foot-glow"
       style={{
-        position: "fixed", top: S.md, left: S.md, zIndex: 999,
+        position: "absolute", top: S.md, left: S.md, zIndex: 999,
         background: "none", border: "none", cursor: "pointer",
         ...DISPLAY_STYLE,
         fontSize: TEXT.body,
@@ -424,6 +424,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
   return (
     <div style={{
       minHeight: "100vh",
+      position: "relative",
       background: `radial-gradient(ellipse at 50% 23.6%, rgba(14,10,28,${A.phi}) 0%, #03030a 61.8%)`,
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: `0 ${S.sm}`,

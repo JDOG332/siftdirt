@@ -35,12 +35,13 @@ export default function MathHubPage({ onBack, onVitruvian, onCRT }) {
   return (
     <div style={{
       minHeight: "100vh",
+      position: "relative",
       background: `radial-gradient(ellipse at 50% 23.6%, rgba(14,10,28,${A.phi}) 0%, #03030a 61.8%)`,
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: `0 ${S.sm}`, paddingBottom: S._2xl,
     }}>
       <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
-        position: "fixed", top: S.md, left: S.md, zIndex: 99,
+        position: "absolute", top: S.md, left: S.md, zIndex: 99,
         background: "none", border: "none", cursor: "pointer",
         ...DISPLAY_STYLE, fontSize: TEXT.body,
         color: GOLD(backH ? A.full : A.phi),
