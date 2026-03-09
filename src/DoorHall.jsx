@@ -79,7 +79,7 @@ function SubCard({ sub, rgb, index, onClick }) {
         <div style={{
           fontFamily: F.display,
           fontWeight: 900,
-          fontSize: TEXT.heading,
+          fontSize: TEXT.title,
           letterSpacing: "0.06em",
           lineHeight: 1.1,
           color: `rgba(${rgb},${hover ? A.full : A.phi})`,
