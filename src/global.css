@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════════════════════════════
+   SIFTDIRT — PHI DESIGN SYSTEM
+   Every value derived from φ = 1.618033988749895
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
+
+:root {
+  --phi: 1.618033988749895;
+
+  /* PHI Spacing Scale */
+  --s-3xs: 0.236rem;
+  --s-2xs: 0.382rem;
+  --s-xs:  0.618rem;
+  --s-sm:  1rem;
+  --s-md:  1.618rem;
+  --s-lg:  2.618rem;
+  --s-xl:  4.236rem;
+  --s-2xl: 6.854rem;
+
+  /* Colors — Cosmos */
+  --void:   #03030a;
+  --gold:   rgba(201, 168, 76, 1);
+  --ivory:  rgba(232, 228, 210, 1);
+  --ghost:  rgba(232, 228, 210, 0.236);
+
+  /* Opacity Hierarchy */
+  --a-full:  1.0;
+  --a-phi:   0.618;
+  --a-dim:   0.382;
+  --a-ghost: 0.236;
+  --a-whisp: 0.146;
+  --a-trace: 0.090;
+
+  /* Typography */
+  --f-display: 'Cinzel', serif;
+  --f-body:    'Cormorant Garamond', serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+  background: var(--void);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  height: 100%;
+  background: var(--void);
+  color: rgba(232, 228, 210, 0.90);
+  font-family: var(--f-body);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.618;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#root {
+  min-height: 100vh;
+  background: var(--void);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 168, 76, 0.236);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 168, 76, 0.382);
+}
+
+/* ── Selection ── */
+::selection {
+  background: rgba(201, 168, 76, 0.236);
+  color: rgba(232, 228, 210, 1);
+}
+
+/* ── Shared Keyframes ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(1.618rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.382; }
+  50%      { opacity: 0.618; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+@keyframes goldPulse {
+  0%, 100% {
+    text-shadow: 0 0 8px rgba(201,168,76,0.45), 0 0 24px rgba(201,168,76,0.18);
+  }
+  50% {
+    text-shadow: 0 0 14px rgba(201,168,76,0.72), 0 0 40px rgba(201,168,76,0.28);
+  }
+}
