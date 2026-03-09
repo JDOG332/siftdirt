@@ -1,34 +1,29 @@
-/**
- * ROOM PAGE — 100% Φ Design System
- * Topic card experience with three depth levels + five senses
- */
-
 import React, { useState, useEffect, useRef } from "react";
 import { SUBCATEGORIES } from "./subcategories.js";
 import { TOPIC_CARDS } from "./topicCards.js";
 import { DOOR_META } from "./DoorHall.jsx";
 import WikiSummary from "./WikiSummary.jsx";
-import { F, S, A, GOLD, IVORY, EASE, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE } from "./phi.js";
+import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow, boxGlow } from "./phi.js";
 
 function SenseCard({ sense, rgb, index }) {
   const [open, setOpen] = useState(false);
   return (
     <div onClick={() => setOpen(o => !o)} style={{
-      padding: open ? S.md : S.sm,
-      background: open ? `rgba(${rgb},${A.ghost})` : "transparent",
-      border: `1px solid rgba(${rgb},${open ? A.ghost : A.ghost})`,
-      borderRadius: S._3xs,
-      cursor: "pointer",
-      transition: `all 618ms ${EASE}`,
+      padding: open ? `${S.md} ${S.md}` : `${S.sm} ${S.sm}`,
+      background: open ? `rgba(${rgb},0.10)` : `rgba(${rgb},0.03)`,
+      border: `1px solid rgba(${rgb},${open ? 0.50 : A.ghost})`,
+      borderRadius: S._2xs, cursor: "pointer",
+      transition: `all 382ms ${EASE}`,
       display: "flex", flexDirection: "column", gap: S.xs,
-      animation: `fadeUp 618ms ${618 + index * 100}ms both ease`,
+      boxShadow: open ? `0 4px 24px rgba(${rgb},0.08)` : "none",
+      animation: `fadeUp 618ms ${618 + index * 80}ms both ease`,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: S.xs }}>
-        <span style={{ fontSize: S.md, lineHeight: 1 }}>{sense.icon}</span>
-        <span style={{ ...DISPLAY_STYLE, fontSize: S._2xs, color: `rgba(${rgb},${open ? A.full : A.phi})`, transition: `color 618ms ${EASE}` }}>{sense.sense}</span>
-        <span style={{ marginLeft: "auto", fontSize: S._2xs, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transition: `all 618ms ${EASE}`, display: "inline-block", transform: open ? "rotate(90deg)" : "none" }}>▶</span>
+        <span style={{ fontSize: "clamp(20px, 3vmin, 26px)", lineHeight: 1 }}>{sense.icon}</span>
+        <span style={{ ...DISPLAY_STYLE, fontSize: TEXT.caption, color: `rgba(${rgb},${open ? A.full : A.phi})`, transition: `color 382ms` }}>{sense.sense}</span>
+        <span style={{ marginLeft: "auto", fontSize: TEXT.caption, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transition: `all 382ms ${EASE}`, display: "inline-block", transform: open ? "rotate(90deg)" : "none" }}>▶</span>
       </div>
-      {open && <div style={{ ...BODY_STYLE, fontWeight: 400, fontSize: S.sm, color: IVORY(A.phi), paddingTop: S.xs, borderTop: `1px solid rgba(${rgb},${A.ghost})`, animation: "fadeIn 382ms ease" }}>{sense.text}</div>}
+      {open && <div style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(A.phi), paddingTop: S.xs, borderTop: `1px solid rgba(${rgb},${A.ghost})`, animation: "fadeIn 382ms ease" }}>{sense.text}</div>}
     </div>
   );
 }
@@ -45,18 +40,19 @@ function SongRow({ song, rgb }) {
     <div>
       <div onClick={() => setOpen(o => !o)} style={{
         display: "flex", alignItems: "center", gap: S._2xs, cursor: "pointer",
-        padding: `${S.xs} 0`,
-        borderBottom: `1px solid rgba(${rgb},${A.ghost})`,
+        padding: `${S.xs} 0`, borderBottom: `1px solid rgba(${rgb},${open ? A.ghost : 0.12})`,
       }}>
-        <span style={{ ...BODY_STYLE, fontWeight: 400, fontSize: S.sm, color: IVORY(open ? A.phi : A.ghost), flex: 1 }}>♪ {song.title}</span>
-        <span style={{ ...DISPLAY_STYLE, fontSize: S._3xs, color: IVORY(A.ghost) }}>{song.artist}</span>
+        <span style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(open ? A.phi : A.ghost), flex: 1, transition: `color 250ms` }}>♪ {song.title}</span>
+        <span style={{ ...DISPLAY_STYLE, fontSize: TEXT.caption, color: IVORY(A.ghost) }}>{song.artist}</span>
+        <span style={{ fontSize: TEXT.caption, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transition: `all 250ms ${EASE}`, transform: open ? "rotate(180deg)" : "none", display: "inline-block", marginLeft: S._2xs }}>▾</span>
       </div>
       {open && (
         <div style={{ display: "flex", gap: S.xs, padding: `${S.xs} 0`, animation: "fadeIn 382ms ease", flexWrap: "wrap" }}>
           {links.map(l => (
             <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" style={{
-              ...DISPLAY_STYLE, fontSize: S._3xs, color: `rgba(${rgb},${A.phi})`, textDecoration: "none",
+              ...DISPLAY_STYLE, fontSize: TEXT.caption, color: `rgba(${rgb},${A.phi})`, textDecoration: "none",
               padding: `${S._2xs} ${S.xs}`, border: `1px solid rgba(${rgb},${A.ghost})`, borderRadius: S._3xs,
+              transition: `all 250ms ${EASE}`,
             }}>{l.label}</a>
           ))}
         </div>
@@ -72,12 +68,11 @@ function Section({ title, rgb, children, defaultOpen = false, delay = 0 }) {
       <button onClick={() => setOpen(o => !o)} style={{
         width: "100%", display: "flex", alignItems: "center", gap: S.xs,
         background: "none", border: "none", cursor: "pointer",
-        padding: `${S.xs} 0`,
-        borderBottom: `1px solid rgba(${rgb},${open ? A.ghost : A.ghost})`,
+        padding: `${S.xs} 0`, borderBottom: `1px solid rgba(${rgb},${open ? A.ghost : 0.09})`,
       }}>
-        <span style={{ ...DISPLAY_STYLE, fontSize: S._2xs, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transition: `color 618ms ${EASE}` }}>{title}</span>
-        <div style={{ flex: 1, height: "1px", background: `rgba(${rgb},${A.ghost})` }} />
-        <span style={{ fontSize: S._2xs, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transition: `all 618ms ${EASE}`, transform: open ? "rotate(180deg)" : "none", display: "inline-block" }}>▾</span>
+        <span style={{ ...DISPLAY_STYLE, fontSize: TEXT.caption, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transition: `color 382ms` }}>{title}</span>
+        <div style={{ flex: 1, height: "1px", background: `rgba(${rgb},0.06)` }} />
+        <span style={{ fontSize: TEXT.caption, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transition: `all 382ms ${EASE}`, transform: open ? "rotate(180deg)" : "none", display: "inline-block" }}>▾</span>
       </button>
       {open && <div style={{ padding: `${S.sm} 0`, animation: "fadeIn 382ms ease" }}>{children}</div>}
     </div>
@@ -91,13 +86,12 @@ function NavBtn({ label, rgb, disabled, onClick }) {
       onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{
         background: "none",
-        border: `1px solid rgba(${rgb},${disabled ? A.ghost : h ? A.phi : A.ghost})`,
-        borderRadius: S._3xs,
-        padding: `${S._2xs} ${S.sm}`,
-        ...DISPLAY_STYLE, fontSize: S._3xs,
+        border: `1px solid rgba(${rgb},${disabled ? 0.06 : h ? A.phi : A.ghost})`,
+        borderRadius: S._3xs, padding: `${S._2xs} ${S.sm}`,
+        ...DISPLAY_STYLE, fontSize: TEXT.caption,
         color: `rgba(${rgb},${disabled ? A.ghost : h ? A.phi : A.ghost})`,
         cursor: disabled ? "default" : "pointer",
-        transition: `all 618ms ${EASE}`,
+        transition: `all 382ms ${EASE}`,
         opacity: disabled ? A.ghost : A.full,
       }}
     >{label}</button>
@@ -105,8 +99,7 @@ function NavBtn({ label, rgb, disabled, onClick }) {
 }
 
 export default function RoomPage({ doorKey, subId, cardId, onBack }) {
-  const meta = DOOR_META[doorKey];
-  if (!meta) return null;
+  const meta = DOOR_META[doorKey]; if (!meta) return null;
   const { rgb, name, emoji } = meta;
   const subs = SUBCATEGORIES[doorKey] || [];
   const sub = subs.find(s => s.id === subId);
@@ -121,54 +114,56 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
   if (!activeCard) return (
     <div style={{ minHeight: "100vh", background: "#03030a", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <span style={{ ...BODY_STYLE, color: IVORY(A.phi) }}>No cards found.</span>
-      <button onClick={onBack} style={{ marginLeft: S.sm, background: "none", border: `1px solid ${GOLD(A.ghost)}`, color: GOLD(A.phi), padding: `${S._2xs} ${S.sm}`, cursor: "pointer", ...DISPLAY_STYLE, fontSize: S._2xs, borderRadius: S._3xs }}>BACK</button>
+      <button onClick={onBack} style={{ marginLeft: S.sm, background: "none", border: `1px solid ${GOLD(A.ghost)}`, color: GOLD(A.phi), padding: `${S._2xs} ${S.sm}`, cursor: "pointer", ...DISPLAY_STYLE, fontSize: TEXT.caption, borderRadius: S._3xs }}>BACK</button>
     </div>
   );
-
-  const hasSenses = activeCard.senses?.length > 0;
-  const hasSongs = activeCard.songs?.length > 0;
-  const hasWiki = activeCard.wiki?.length > 0;
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: `radial-gradient(ellipse at 50% 23.6%, rgba(${rgb},${A.ghost}) 0%, #03030a 61.8%)`,
+      background: `radial-gradient(ellipse at 50% 8%, rgba(${rgb},0.05) 0%, #03030a 50%)`,
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: `0 ${S.sm}`, paddingBottom: S._2xl,
     }}>
+      <div style={{
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "61.8vw", height: "23.6vh",
+        background: `radial-gradient(ellipse, rgba(${rgb},0.05) 0%, transparent 61.8%)`,
+        pointerEvents: "none",
+      }} />
+
       <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
         position: "fixed", top: S.md, left: S.md, zIndex: 99,
         background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE, fontSize: S.xs,
+        ...DISPLAY_STYLE, fontSize: TEXT.label,
         color: `rgba(${rgb},${backH ? A.full : A.phi})`,
-        transition: `color 618ms ${EASE}`,
-        padding: `${S.xs} ${S.sm}`,
+        transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
       }}>← BACK</button>
 
-      <div style={{ width: "100%", maxWidth: "40rem", paddingTop: S._2xl, display: "flex", flexDirection: "column", gap: S.xs, zIndex: 1 }}>
-        <div style={{ ...DISPLAY_STYLE, fontSize: S._3xs, color: `rgba(${rgb},${A.ghost})`, animation: "fadeUp 618ms 100ms both ease" }}>{emoji} {name} → {sub?.name || subId}</div>
+      <div style={{ width: "100%", maxWidth: "40rem", paddingTop: "clamp(80px, 12vh, 110px)", display: "flex", flexDirection: "column", gap: S.xs, zIndex: 1 }}>
+        <div style={{ ...DISPLAY_STYLE, fontSize: TEXT.caption, color: `rgba(${rgb},${A.ghost})`, animation: "fadeUp 618ms 100ms both ease" }}>{emoji} {name} → {sub?.name || subId}</div>
 
-        <h1 style={{ ...DISPLAY_STYLE, fontSize: S.xl, color: IVORY(A.full), animation: "fadeUp 618ms 236ms both ease", textShadow: `0 0 ${S.md} rgba(232,228,210,${A.ghost})` }}>{activeCard.title}</h1>
+        <h1 style={{ ...DISPLAY_STYLE, fontSize: TEXT.hero, color: IVORY(A.full), animation: "fadeUp 618ms 236ms both ease", textShadow: `0 0 28px rgba(232,228,210,0.12)` }}>{activeCard.title}</h1>
 
-        {activeCard.subtitle && <p style={{ ...ACCENT_STYLE, fontSize: S.sm, color: `rgba(${rgb},${A.phi})`, animation: "fadeUp 618ms 382ms both ease" }}>{activeCard.subtitle}</p>}
+        {activeCard.subtitle && <p style={{ ...ACCENT_STYLE, fontSize: TEXT.body, color: `rgba(${rgb},${A.phi})`, animation: "fadeUp 618ms 382ms both ease" }}>{activeCard.subtitle}</p>}
 
         <div style={{ width: S._2xl, height: "1px", background: `linear-gradient(90deg, rgba(${rgb},${A.phi}), transparent)`, margin: `${S.xs} 0`, animation: "fadeUp 618ms 382ms both ease" }} />
 
-        {activeCard.simple && <div style={{ ...BODY_STYLE, fontWeight: 400, fontSize: S.md, color: IVORY(A.phi), animation: "fadeUp 618ms 618ms both ease", padding: `${S.xs} 0` }}>{activeCard.simple}</div>}
+        {activeCard.simple && <div style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(A.phi), animation: "fadeUp 618ms 618ms both ease", padding: `${S.xs} 0` }}>{activeCard.simple}</div>}
 
         {activeCard.intuition && (
           <Section title="GO DEEPER" rgb={rgb} delay={618}>
-            <div style={{ ...BODY_STYLE, fontWeight: 400, fontSize: S.sm, color: IVORY(A.phi) }}>{activeCard.intuition}</div>
+            <div style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(A.phi) }}>{activeCard.intuition}</div>
           </Section>
         )}
 
         {activeCard.advanced && (
           <Section title="THE FULL PICTURE" rgb={rgb} delay={618}>
-            <div style={{ ...BODY_STYLE, fontSize: S.sm, color: IVORY(A.ghost) }}>{activeCard.advanced}</div>
+            <div style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost) }}>{activeCard.advanced}</div>
           </Section>
         )}
 
-        {hasSenses && (
+        {activeCard.senses?.length > 0 && (
           <Section title="FIVE SENSES" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
               {activeCard.senses.map((s, i) => <SenseCard key={s.sense || i} sense={s} rgb={rgb} index={i} />)}
@@ -176,7 +171,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           </Section>
         )}
 
-        {hasSongs && (
+        {activeCard.songs?.length > 0 && (
           <Section title="LISTEN" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {activeCard.songs.map((s, i) => <SongRow key={i} song={s} rgb={rgb} />)}
@@ -184,7 +179,7 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           </Section>
         )}
 
-        {hasWiki && (
+        {activeCard.wiki?.length > 0 && (
           <Section title="EXPLORE FURTHER" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
               {activeCard.wiki.map((topic, i) => <WikiSummary key={topic} topic={topic} rgb={rgb} index={i} />)}
@@ -193,9 +188,9 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
         )}
 
         {cards.length > 1 && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: S.lg, padding: `${S.sm} 0`, borderTop: `1px solid rgba(${rgb},${A.ghost})` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: S.lg, padding: `${S.sm} 0`, borderTop: `1px solid rgba(${rgb},0.09)` }}>
             <NavBtn label="← PREV" rgb={rgb} disabled={cardIdx <= 0} onClick={() => setCardIdx(i => Math.max(0, i - 1))} />
-            <span style={{ ...DISPLAY_STYLE, fontSize: S._3xs, color: `rgba(${rgb},${A.ghost})` }}>{cardIdx + 1} / {cards.length}</span>
+            <span style={{ ...DISPLAY_STYLE, fontSize: TEXT.caption, color: `rgba(${rgb},${A.ghost})` }}>{cardIdx + 1} / {cards.length}</span>
             <NavBtn label="NEXT →" rgb={rgb} disabled={cardIdx >= cards.length - 1} onClick={() => setCardIdx(i => Math.min(cards.length - 1, i + 1))} />
           </div>
         )}

@@ -1,11 +1,6 @@
-/**
- * DOOR HALL — 100% Φ Design System
- * phi-card aspect ratio, strict spacing, correct typography
- */
-
 import React, { useState } from "react";
 import { SUBCATEGORIES } from "./subcategories.js";
-import { F, S, A, GOLD, IVORY, EASE, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE } from "./phi.js";
+import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow, boxGlow } from "./phi.js";
 
 export const DOOR_META = {
   sameness: { name: "Religion",      emoji: "⛪", rgb: "201,168,76"  },
@@ -39,118 +34,122 @@ function SubCard({ sub, rgb, index, onClick }) {
     <div onClick={onClick}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
-        aspectRatio: "1.618 / 1",
-        padding: S.md,
-        background: hover ? `rgba(${rgb},${A.ghost})` : "transparent",
-        border: `1px solid rgba(${rgb},${hover ? A.phi : A.ghost})`,
-        borderRadius: S._3xs,
+        padding: `${S.md} ${S.lg}`,
+        background: hover ? `rgba(${rgb},0.14)` : `rgba(${rgb},0.06)`,
+        border: `1px solid rgba(${rgb},${hover ? 0.55 : A.ghost})`,
+        borderRadius: S._2xs,
         cursor: "pointer",
-        transition: `all 618ms ${EASE}`,
-        animation: `fadeUp 618ms ${index * 100}ms both ease`,
-        boxShadow: hover ? `0 0 ${S.lg} rgba(${rgb},${A.ghost})` : "none",
+        transition: `all 382ms ${EASE}`,
+        animation: `fadeUp 618ms ${index * 62}ms both ease`,
+        boxShadow: hover
+          ? `0 4px 32px rgba(${rgb},0.14), inset 0 0 24px rgba(${rgb},0.04)`
+          : "0 1px 8px rgba(0,0,0,0.4)",
         display: "flex", flexDirection: "column",
-        justifyContent: "center", gap: S.xs,
-        overflow: "hidden",
+        gap: S.xs, height: "100%",
+        position: "relative", overflow: "hidden",
       }}
     >
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 1,
+        background: `linear-gradient(90deg, transparent, rgba(${rgb},${hover ? A.phi : A.ghost}), transparent)`,
+        transition: `background 382ms ${EASE}`,
+      }} />
       <div style={{ display: "flex", alignItems: "center", gap: S.xs }}>
-        <span style={{ fontSize: S.lg, lineHeight: 1, flexShrink: 0 }}>{sub.icon}</span>
+        <span style={{ fontSize: "clamp(24px, 4vmin, 32px)", lineHeight: 1, flexShrink: 0 }}>{sub.icon}</span>
         <div style={{
           ...DISPLAY_STYLE,
-          fontSize: S.xs,
+          fontSize: TEXT.label,
           color: `rgba(${rgb},${hover ? A.full : A.phi})`,
-          transition: `color 618ms ${EASE}`,
+          textShadow: hover ? textGlow(rgb, 0.618) : "none",
+          transition: `all 382ms ${EASE}`,
         }}>{sub.name}</div>
       </div>
       <div style={{
-        ...BODY_STYLE,
-        fontWeight: 400,
-        fontSize: S.sm,
+        ...BODY_STYLE, fontWeight: 400,
+        fontSize: TEXT.body,
         color: IVORY(hover ? A.full : A.phi),
-        transition: `color 618ms ${EASE}`,
+        transition: `color 382ms ${EASE}`,
         paddingLeft: S.xl,
       }}>{sub.desc}</div>
       <div style={{
-        height: "1px",
-        background: `rgba(${rgb},${hover ? A.phi : A.ghost})`,
+        height: 1, background: `rgba(${rgb},${hover ? A.phi : A.ghost})`,
         width: `${Math.round(sub.psi * 100)}%`,
         transition: `all 618ms ${EASE}`,
-        marginLeft: S.xl,
+        marginTop: S._3xs,
       }} />
     </div>
   );
 }
 
-function BackBtn({ onClick, rgb }) {
-  const [h, setH] = useState(false);
-  return (
-    <button onClick={onClick}
-      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
-      style={{
-        position: "fixed", top: S.md, left: S.md, zIndex: 99,
-        background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE,
-        fontSize: S.xs,
-        color: `rgba(${rgb},${h ? A.full : A.phi})`,
-        transition: `color 618ms ${EASE}`,
-        padding: `${S.xs} ${S.sm}`,
-      }}
-    >← BACK</button>
-  );
-}
-
 export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
-  const meta = DOOR_META[doorKey];
-  if (!meta) return null;
+  const meta = DOOR_META[doorKey]; if (!meta) return null;
   const subs = SUBCATEGORIES[doorKey] || [];
   const { rgb, name, emoji } = meta;
+  const [backH, setBackH] = useState(false);
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: `radial-gradient(ellipse at 50% 23.6%, rgba(${rgb},${A.ghost}) 0%, #03030a 61.8%)`,
+      background: `radial-gradient(ellipse at 50% 15%, rgba(${rgb},0.06) 0%, #03030a 55%)`,
+      color: IVORY(A.phi),
       display: "flex", flexDirection: "column", alignItems: "center",
-      padding: `0 ${S.sm}`, paddingBottom: S._2xl,
+      padding: `0 ${S.md}`, paddingBottom: S._2xl,
     }}>
-      <BackBtn onClick={onBack} rgb={rgb} />
+      <div style={{
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "61.8vw", height: "38.2vh",
+        background: `radial-gradient(ellipse, rgba(${rgb},0.07) 0%, transparent 61.8%)`,
+        pointerEvents: "none", zIndex: 0,
+      }} />
+
+      <button onClick={onBack}
+        onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)}
+        style={{
+          position: "fixed", top: S.md, left: S.md, zIndex: 99,
+          background: "none", border: "none", cursor: "pointer",
+          ...DISPLAY_STYLE, fontSize: TEXT.label,
+          color: `rgba(${rgb},${backH ? A.full : A.phi})`,
+          transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
+        }}
+      >← BACK</button>
 
       <div style={{
         position: "relative", zIndex: 1,
-        width: "100%", maxWidth: "42rem",
+        width: "100%", maxWidth: "44rem",
         display: "flex", flexDirection: "column", alignItems: "center",
-        paddingTop: S._2xl,
+        paddingTop: "clamp(80px, 13vh, 120px)",
       }}>
         <div style={{
-          ...DISPLAY_STYLE,
-          fontSize: S.xs,
-          color: `rgba(${rgb},${A.phi})`,
+          ...DISPLAY_STYLE, fontSize: TEXT.heading,
+          letterSpacing: "0.236em",
+          color: `rgba(${rgb},A.phi)`,
           marginBottom: S.xs,
-          animation: "fadeUp 618ms 100ms both ease",
+          animation: "fadeUp 1s 100ms both ease",
         }}>{emoji} {name.toUpperCase()}</div>
 
         <h1 style={{
           ...ACCENT_STYLE,
-          fontSize: S.lg,
+          fontSize: TEXT.title,
           color: IVORY(A.phi),
-          textAlign: "center",
-          maxWidth: "34rem",
-          marginBottom: S.sm,
-          textShadow: `0 0 ${S.md} rgba(232,228,210,${A.ghost})`,
-          animation: "fadeUp 618ms 236ms both ease",
+          textAlign: "center", lineHeight: 1.618,
+          maxWidth: "36rem",
+          marginBottom: S.md,
+          textShadow: `0 0 30px rgba(232,228,210,0.18), 0 0 60px rgba(232,228,210,0.08)`,
+          animation: "fadeUp 1s 236ms both ease",
         }}>{QUESTIONS[doorKey]}</h1>
 
         <div style={{
-          width: S._2xl, height: "1px",
-          background: `linear-gradient(90deg, transparent, rgba(${rgb},${A.phi}), transparent)`,
+          width: S._2xl, height: 1,
+          background: `linear-gradient(90deg, transparent, rgba(${rgb},0.50), transparent)`,
           marginBottom: S.lg,
-          animation: "fadeUp 618ms 382ms both ease",
+          animation: "fadeUp 1s 382ms both ease",
         }} />
 
         <div style={{
           width: "100%",
           display: "grid",
           gridTemplateColumns: "repeat(auto-fill, minmax(18rem, 1fr))",
-          gap: S.sm,
+          gap: S.md, alignItems: "stretch",
         }}>
           {subs.map((sub, i) => (
             <SubCard key={sub.id} sub={sub} rgb={rgb} index={i}
@@ -158,6 +157,13 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
           ))}
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity:0; transform:translateY(${S.md}); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

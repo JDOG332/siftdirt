@@ -1,14 +1,21 @@
 /**
- * PROOF PAGE — 100% Φ Design System
- * Every spacing, font, opacity, and ratio from φ = 1.618
+ * PROOF PAGE — The Heart of siftdirt.com
+ * RESTORED: DoorOrnament, dynamic pyramid, atmospheric glows
+ * KEPT: Clean structure, better search input, simpler layout
  */
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { PHI, PHI_INV } from "./data.js";
 import { classifyContent, TEN_DOORS } from "./tenDoors.js";
 import { siftSearch } from "./siftEngine.js";
-import { F, S, A, GOLD, IVORY, EASE, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE } from "./phi.js";
+import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow, boxGlow } from "./phi.js";
 
+const PHIi  = 0.6180339887498949;
+const PHIi2 = 0.3819660112501051;
+const PHIi3 = 0.2360679774997896;
+const PHIi4 = 0.1458980337503153;
+
+// ─── TETRACTYS LAYOUT ─────────────────────────────────────────
 const TETRACTYS = [
   [{ num: "IX",  name: "LOVE",          emoji: "💛", key: "Love" }],
   [{ num: "IV",  name: "MYSTICISM",     emoji: "✨", key: "Mysticism" },
@@ -23,9 +30,9 @@ const TETRACTYS = [
 ];
 
 const DOOR_COLORS = {
-  "Love":"220,160,160", "Mysticism":"190,140,220", "Consciousness":"200,200,230",
-  "Religion":"201,168,76", "Art":"224,120,100", "Nature":"120,180,100",
-  "Mythology":"200,160,100", "Philosophy":"150,180,220", "Science":"79,195,247",
+  "Love":"220,160,160","Mysticism":"190,140,220","Consciousness":"200,200,230",
+  "Religion":"201,168,76","Art":"224,120,100","Nature":"120,180,100",
+  "Mythology":"200,160,100","Philosophy":"150,180,220","Science":"79,195,247",
   "Mathematics":"201,168,76",
 };
 
@@ -35,73 +42,172 @@ const DOOR_DATA_KEY = {
   "Love":"filter","Consciousness":"ancient",
 };
 
-function BackButton({ onClick, rgb = "201,168,76" }) {
+// ─── FLOWER OF LIFE ORNAMENT ──────────────────────────────────
+function DoorOrnament({ size, alpha }) {
+  const r = size / 2;
+  const r1 = r * PHIi, r2 = r * PHIi2, r3 = r * PHIi3;
+  const O = { ghost: PHIi4, dim: PHIi3, mid: PHIi2, pres: PHIi };
+  const petals = Array.from({ length: 6 }, (_, i) => {
+    const a = (i / 6) * Math.PI * 2;
+    const cx = r + Math.cos(a) * r2, cy = r + Math.sin(a) * r2;
+    return `M${cx} ${cy} m-${r2} 0 a${r2} ${r2} 0 1 0 ${r2*2} 0 a${r2} ${r2} 0 1 0-${r2*2} 0`;
+  });
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+      style={{ opacity: alpha, overflow: "visible", display: "block", flexShrink: 0 }}>
+      <circle cx={r} cy={r} r={r*.94} fill="none" stroke={GOLD(O.dim)} strokeWidth=".5"/>
+      {petals.map((d, i) => <path key={i} d={d} fill="none" stroke={GOLD(O.dim)} strokeWidth=".5"/>)}
+      {[0,1,2,3,4,5].map(i => {
+        const a = (i/6)*Math.PI*2;
+        return <line key={i} x1={r+Math.cos(a)*r1} y1={r+Math.sin(a)*r1}
+          x2={r+Math.cos(a+Math.PI)*r1} y2={r+Math.sin(a+Math.PI)*r1}
+          stroke={GOLD(O.ghost)} strokeWidth=".4"/>;
+      })}
+      <circle cx={r} cy={r} r={r1} fill="none" stroke={GOLD(O.dim)} strokeWidth=".5"/>
+      <circle cx={r} cy={r} r={r3} fill="none" stroke={GOLD(O.mid)} strokeWidth=".5"/>
+      <circle cx={r} cy={r} r={3.5} fill={GOLD(O.pres)}/>
+      <circle cx={r} cy={r} r={1.5} fill={GOLD(1)}/>
+    </svg>
+  );
+}
+
+// ─── BACK BUTTON (with breathing glow) ───────────────────────
+function BackButton({ onClick }) {
   const [h, setH] = useState(false);
   return (
     <button onClick={onClick}
       onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      className="foot-glow"
       style={{
-        position: "fixed", top: S.md, left: S.md, zIndex: 99,
+        position: "fixed", top: S.md, left: S.md, zIndex: 999,
         background: "none", border: "none", cursor: "pointer",
         ...DISPLAY_STYLE,
-        fontSize: S.xs,
-        color: `rgba(${rgb},${h ? A.full : A.phi})`,
+        fontSize: TEXT.label,
+        color: GOLD(h ? A.full : A.phi),
         transition: `color 618ms ${EASE}`,
         padding: `${S.xs} ${S.sm}`,
+        userSelect: "none",
       }}
     >← BACK</button>
   );
 }
 
-function DoorNode({ door, score, maxScore, onClick }) {
-  const [hover, setHover] = useState(false);
-  const rgb = DOOR_COLORS[door.key] || "201,168,76";
-  const intensity = maxScore > 0 ? score / maxScore : 0;
-  const isLit = intensity > 0.1;
-  const alpha = isLit ? A.phi : A.ghost;
+// ─── DYNAMIC TETRACTYS PYRAMID ────────────────────────────────
+function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
+  const W = typeof window !== "undefined" ? window.innerWidth : 800;
+  const H = typeof window !== "undefined" ? window.innerHeight : 900;
+  // Dynamic card sizing — 4 rows must fit above fold
+  const cardByH = Math.round(H * 0.56 / 4.236);
+  const cardByW = Math.round(W / 4.236);
+  const card = Math.round(Math.max(80, Math.min(cardByH, cardByW, 128)));
+  const gap  = Math.round(Math.max(7, Math.min(11, W / 62)));
+  const rowGap = Math.round(gap * 1.1);
+  const emojiSz = Math.round(card * 0.36);
+
+  function labelSize(name) {
+    const base = Math.round(card * 0.15);
+    return Math.max(7, Math.round(base * Math.sqrt(6 / Math.max(6, name.length))));
+  }
 
   return (
-    <button onClick={onClick}
-      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      style={{
-        background: hover ? `rgba(${rgb},${A.ghost})` : `rgba(${rgb},${isLit ? A.ghost : 0})`,
-        border: `1px solid rgba(${rgb},${hover ? A.phi : isLit ? A.ghost : A.ghost})`,
-        borderRadius: S._3xs,
-        padding: `${S.xs} ${S.sm}`,
-        cursor: "pointer",
-        transition: `all 618ms ${EASE}`,
-        display: "flex", flexDirection: "column", alignItems: "center",
-        gap: S._3xs,
-        flex: "1 1 0",
-        aspectRatio: "1.618 / 1",
-        justifyContent: "center",
-        boxShadow: hover ? `0 0 ${S.md} rgba(${rgb},${A.ghost})` : "none",
-      }}
-    >
-      <span style={{ fontSize: S.lg, lineHeight: 1 }}>{door.emoji}</span>
-      <span style={{
-        ...DISPLAY_STYLE,
-        fontSize: S._2xs,
-        color: `rgba(${rgb},${hover ? A.full : alpha})`,
-        transition: `color 618ms ${EASE}`,
-        textAlign: "center",
-      }}>{door.name}</span>
-      {isLit && (
-        <div style={{
-          width: "100%", height: S._3xs, borderRadius: S._3xs,
-          background: `rgba(${rgb},${A.ghost})`, overflow: "hidden",
-        }}>
-          <div style={{
-            width: `${Math.round(intensity * 100)}%`, height: "100%",
-            background: `rgba(${rgb},${A.phi})`,
-            transition: `width 618ms ${EASE}`,
-          }} />
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      gap: rowGap, width: "100%",
+      animation: "fadeUp 1s 382ms both ease",
+    }}>
+      {TETRACTYS.map((row, ri) => (
+        <div key={ri} style={{ display: "flex", gap, justifyContent: "center" }}>
+          {row.map((door) => {
+            const pct = scores?.[door.key] ?? 0;
+            const isTop = topDoor === door.key;
+            const rgb = DOOR_COLORS[door.key] || "201,168,76";
+            const hasScore = scores !== null && Object.keys(scores).length > 0;
+            const bgOp  = hasScore ? Math.max(0.08, pct / 100 * 0.9) : 0.12;
+            const borOp = hasScore ? Math.max(0.22, pct / 100 * 0.6) : 0.30;
+            const txtOp = hasScore ? Math.max(0.70, Math.min(1.0, pct / 100 * 1.4)) : 0.90;
+            const emjOp = hasScore ? Math.max(0.75, Math.min(1.0, pct / 60)) : 0.95;
+
+            return (
+              <div key={door.key}
+                onClick={() => onDoorSelect(DOOR_DATA_KEY[door.key])}
+                style={{
+                  width: card, height: card,
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  gap: Math.round(card * 0.06),
+                  borderRadius: 8,
+                  background: `rgba(${rgb},${bgOp})`,
+                  border: `1px solid rgba(${rgb},${borOp})`,
+                  boxShadow: isTop
+                    ? `0 0 ${card * 0.38}px rgba(${rgb},0.22), 0 0 ${card * 0.7}px rgba(${rgb},0.07)`
+                    : pct > 20 ? `0 0 ${card * 0.2}px rgba(${rgb},0.09)` : "none",
+                  transition: `all 618ms ${EASE}`,
+                  animation: isTop ? "proofPulse 2.618s ease-in-out infinite" : "none",
+                  cursor: "pointer",
+                  position: "relative",
+                  overflow: "visible",
+                  padding: `${Math.round(card * 0.1)}px ${Math.round(card * 0.06)}px`,
+                  userSelect: "none",
+                }}
+              >
+                {/* Inner radial glow on activation */}
+                {pct > 10 && (
+                  <div style={{
+                    position: "absolute", inset: 0, borderRadius: 7,
+                    background: `radial-gradient(ellipse at center, rgba(${rgb},${Math.min(0.12, pct/300)}) 0%, transparent 70%)`,
+                    pointerEvents: "none",
+                  }} />
+                )}
+
+                {/* Top rule glow */}
+                <div style={{
+                  position: "absolute", top: 0, left: "15%", right: "15%", height: 1,
+                  background: `rgba(${rgb},${borOp * 1.5})`,
+                  transition: `background 618ms ease`,
+                }} />
+
+                {/* Emoji with drop-shadow glow */}
+                <div style={{
+                  fontSize: emojiSz, lineHeight: 1,
+                  opacity: emjOp,
+                  filter: pct > 5 ? `drop-shadow(0 0 ${Math.round(emojiSz * 0.4)}px rgba(${rgb},${Math.min(0.6, pct/60)}))` : "none",
+                  transition: `all 618ms ease`,
+                  flexShrink: 0,
+                }}>{door.emoji}</div>
+
+                {/* Label */}
+                <div style={{
+                  fontFamily: F.display,
+                  fontWeight: 900,
+                  fontSize: labelSize(door.name),
+                  letterSpacing: 0,
+                  color: `rgba(${rgb},${txtOp})`,
+                  textAlign: "center",
+                  transition: `color 618ms ease`,
+                  lineHeight: 1.1,
+                  width: "100%",
+                  whiteSpace: "nowrap",
+                }}>{door.name}</div>
+
+                {/* Score percentage */}
+                {hasScore && pct > 0 && (
+                  <div style={{
+                    fontFamily: F.body, fontWeight: 300,
+                    fontSize: Math.max(7, Math.round(card * 0.09)),
+                    color: `rgba(${rgb},${Math.max(0.3, pct/100)})`,
+                    transition: `color 618ms ease`,
+                  }}>{Math.round(pct)}%</div>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
-    </button>
+      ))}
+    </div>
   );
 }
 
+// ─── SEARCH RESULT CARD ──────────────────────────────────────
 function ResultCard({ result, index, onClick }) {
   const [hover, setHover] = useState(false);
   const isCard = result.type === "card";
@@ -114,45 +220,69 @@ function ResultCard({ result, index, onClick }) {
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
         padding: `${S.sm} ${S.md}`,
-        background: hover ? `rgba(${rgb},${A.ghost})` : "transparent",
-        border: `1px solid rgba(${rgb},${hover ? A.ghost : A.ghost})`,
-        borderRadius: S._3xs,
+        background: hover ? `rgba(${rgb},${A.ghost})` : `rgba(${rgb},0.03)`,
+        border: `1px solid rgba(${rgb},${hover ? A.phi : A.ghost})`,
+        borderRadius: S._2xs,
         cursor: "pointer",
-        transition: `all 618ms ${EASE}`,
+        transition: `all 382ms ${EASE}`,
         animation: `fadeUp 618ms ${100 + index * 100}ms both ease`,
         display: "flex", flexDirection: "column", gap: S._2xs,
+        boxShadow: hover ? boxGlow(rgb, 0.618) : "none",
       }}
     >
       <span style={{
-        ...DISPLAY_STYLE,
-        fontSize: S._2xs,
+        ...DISPLAY_STYLE, fontSize: TEXT.caption,
         color: `rgba(${rgb},${A.phi})`,
       }}>
         {isCard ? `${result.doorEmoji} ${result.doorName}` : "✦ MIRROR"}
+        {isCard && result.subName && (
+          <span style={{ ...BODY_STYLE, fontSize: TEXT.caption, color: IVORY(A.ghost), marginLeft: S.xs }}>{result.subName}</span>
+        )}
       </span>
       <span style={{
-        ...BODY_STYLE,
-        fontWeight: 400,
-        fontSize: S.md,
+        ...BODY_STYLE, fontWeight: 400,
+        fontSize: TEXT.body,
         color: IVORY(hover ? A.full : A.phi),
-        transition: `color 618ms ${EASE}`,
+        transition: `color 382ms ${EASE}`,
       }}>{title}</span>
       {subtitle && (
-        <span style={{
-          ...BODY_STYLE,
-          fontSize: S.sm,
-          color: IVORY(A.ghost),
-        }}>{subtitle}</span>
+        <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost) }}>{subtitle}</span>
       )}
     </div>
   );
 }
+
+// ─── NAV LINK ─────────────────────────────────────────────────
+function NavLink({ label, onClick }) {
+  const [h, setH] = useState(false);
+  return (
+    <button onClick={onClick}
+      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+      style={{
+        background: "none",
+        border: `1px solid ${GOLD(h ? A.phi : A.ghost)}`,
+        borderRadius: S._3xs,
+        padding: `${S.xs} ${S.md}`,
+        ...DISPLAY_STYLE, fontSize: TEXT.caption,
+        color: GOLD(h ? A.phi : A.ghost),
+        cursor: "pointer",
+        transition: `all 618ms ${EASE}`,
+        boxShadow: h ? boxGlow("201,168,76", 0.236) : "none",
+      }}
+    >{label}</button>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PROOF PAGE
+// ═══════════════════════════════════════════════════════════════
 
 export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems, onMath, autoSearch }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [doorScores, setDoorScores] = useState({});
   const [maxDoorScore, setMaxDoorScore] = useState(0);
+  const [topDoor, setTopDoor] = useState(null);
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
 
@@ -163,12 +293,15 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
 
   const runSearch = useCallback((q) => {
     if (!q || q.trim().length < 2) {
-      setResults([]); setDoorScores({}); setMaxDoorScore(0); return;
+      setResults([]); setDoorScores({}); setMaxDoorScore(0); setTopDoor(null); return;
     }
     const classified = classifyContent(q);
-    const scores = {}; let max = 0;
-    classified.forEach((d) => { scores[d.door.name] = d.pct; if (d.pct > max) max = d.pct; });
-    setDoorScores(scores); setMaxDoorScore(max);
+    const scores = {}; let max = 0; let top = null;
+    classified.forEach((d) => {
+      scores[d.door.name] = d.pct;
+      if (d.pct > max) { max = d.pct; top = d.door.name; }
+    });
+    setDoorScores(scores); setMaxDoorScore(max); setTopDoor(top);
     setResults(siftSearch(q));
   }, []);
 
@@ -190,30 +323,61 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: `0 ${S.sm}`,
       paddingBottom: S._2xl,
+      overflowX: "hidden",
     }}>
+
+      {/* Animations */}
+      <style>{`
+        .foot-glow { animation: footGlow 11.2s ease-in-out infinite; }
+        @keyframes footGlow {
+          0%,100% { text-shadow: 0 0 8px rgba(201,168,76,0.5), 0 0 20px rgba(201,168,76,0.25), 0 0 40px rgba(201,168,76,0.1); }
+          50%     { text-shadow: 0 0 12px rgba(201,168,76,0.8), 0 0 30px rgba(201,168,76,0.4), 0 0 60px rgba(201,168,76,0.2); }
+        }
+        @keyframes proofPulse {
+          0%,100% { filter: brightness(1); }
+          50%     { filter: brightness(1.25); }
+        }
+      `}</style>
+
+      {/* Ambient atmospheric glow */}
+      <div style={{
+        position: "fixed", top: 0, left: "50%", transform: "translateX(-50%)",
+        width: "61.8vw", height: "38.2vh",
+        background: `radial-gradient(ellipse, rgba(201,168,76,0.04) 0%, transparent 61.8%)`,
+        pointerEvents: "none", zIndex: 0,
+      }} />
+
       <BackButton onClick={onBack} />
 
       <div style={{
-        width: "100%", maxWidth: "42rem",
+        width: "100%", maxWidth: "40rem",
         display: "flex", flexDirection: "column", alignItems: "center",
         paddingTop: S._2xl, position: "relative", zIndex: 1,
       }}>
+
+        {/* Flower of Life ornament */}
+        <div style={{ animation: "fadeUp 1s 100ms both ease", marginBottom: S.xs }}>
+          <DoorOrnament size={48} alpha={A.phi} />
+        </div>
+
+        {/* Title */}
         <h1 style={{
           ...DISPLAY_STYLE,
-          fontSize: S.xl,
+          fontSize: TEXT.title,
           color: GOLD(A.phi),
           textAlign: "center",
-          animation: "fadeUp 618ms 100ms both ease",
+          animation: "fadeUp 1s 100ms both ease",
           marginBottom: S.xs,
-          textShadow: `0 0 ${S.md} rgba(201,168,76,${A.ghost})`,
+          textShadow: textGlow("201,168,76", 0.618),
         }}>SIFT THE DIRT</h1>
 
+        {/* Subtitle */}
         <p style={{
           ...ACCENT_STYLE,
-          fontSize: S.sm,
+          fontSize: TEXT.body,
           color: IVORY(A.phi),
           textAlign: "center",
-          animation: "fadeUp 618ms 236ms both ease",
+          animation: "fadeUp 1s 236ms both ease",
           marginBottom: S.md,
           maxWidth: "30rem",
         }}>
@@ -227,49 +391,35 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
             spellCheck={false}
             style={{
               width: "100%",
-              background: `rgba(232,228,210,${A.ghost})`,
+              background: `rgba(232,228,210,0.03)`,
               border: `1px solid ${GOLD(query ? A.ghost : A.ghost)}`,
-              borderRadius: S._3xs,
+              borderRadius: S._2xs,
               padding: `${S.sm} ${S.md}`,
-              ...BODY_STYLE,
-              fontWeight: 400,
-              fontSize: S.md,
+              ...BODY_STYLE, fontWeight: 400,
+              fontSize: TEXT.body,
               color: IVORY(A.full),
               outline: "none",
               transition: `all 618ms ${EASE}`,
+              boxShadow: query ? `0 0 24px rgba(201,168,76,0.08), inset 0 0 12px rgba(201,168,76,0.02)` : "none",
             }}
             onFocus={(e) => e.target.style.borderColor = GOLD(A.phi)}
             onBlur={(e) => e.target.style.borderColor = GOLD(A.ghost)}
           />
         </div>
 
-        {/* Tetractys */}
-        <div style={{
-          width: "100%",
-          display: "flex", flexDirection: "column", alignItems: "center",
-          gap: S.xs,
-          animation: "fadeUp 618ms 618ms both ease",
-          marginBottom: S.lg,
-        }}>
-          {TETRACTYS.map((row, ri) => (
-            <div key={ri} style={{
-              display: "flex", justifyContent: "center",
-              gap: S.xs, width: `${(row.length / 4) * 100}%`,
-            }}>
-              {row.map((door) => (
-                <DoorNode key={door.key} door={door}
-                  score={doorScores[door.key] || 0} maxScore={maxDoorScore}
-                  onClick={() => { const dk = DOOR_DATA_KEY[door.key]; if (dk) onDoorSelect(dk); }}
-                />
-              ))}
-            </div>
-          ))}
+        {/* Dynamic Tetractys Pyramid */}
+        <div style={{ marginBottom: S.lg, width: "100%" }}>
+          <TetractysDisplay
+            scores={doorScores}
+            topDoor={topDoor}
+            onDoorSelect={onDoorSelect}
+          />
         </div>
 
-        {/* Results */}
+        {/* Search Results */}
         {results.length > 0 && (
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: S.xs, marginBottom: S.lg }}>
-            <div style={{ width: "100%", height: "1px", background: `linear-gradient(90deg, transparent, ${GOLD(A.ghost)}, transparent)` }} />
+            <div style={{ width: "100%", height: "1px", background: `linear-gradient(90deg, transparent, ${GOLD(A.ghost)}, transparent)`, marginBottom: S._2xs }} />
             {results.map((r, i) => (
               <ResultCard key={`${r.type}-${i}`} result={r} index={i} onClick={() => handleResultClick(r)} />
             ))}
@@ -283,25 +433,5 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
         </div>
       </div>
     </div>
-  );
-}
-
-function NavLink({ label, onClick }) {
-  const [h, setH] = useState(false);
-  return (
-    <button onClick={onClick}
-      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
-      style={{
-        background: "none",
-        border: `1px solid ${GOLD(h ? A.phi : A.ghost)}`,
-        borderRadius: S._3xs,
-        padding: `${S.xs} ${S.md}`,
-        ...DISPLAY_STYLE,
-        fontSize: S._2xs,
-        color: GOLD(h ? A.phi : A.ghost),
-        cursor: "pointer",
-        transition: `all 618ms ${EASE}`,
-      }}
-    >{label}</button>
   );
 }

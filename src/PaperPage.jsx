@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { F, S, A, GOLD, IVORY, EASE, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE } from "./phi.js";
+import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow } from "./phi.js";
 
 const SECTIONS = [
   { title: "The Master Equation", content: "Ψ₁₂ = R₁₂ × G\n\nWhere:\n  Ψ₁₂ = The Convergent Recognition Functional\n  R₁₂ = Disjoint Recognition Core (Uhlmann Fidelity × Informativeness Gate)\n  G   = Global Reliability Modulator (C_eff × D̂)\n\nThe universe is a self-recognizing information structure. Every interaction between two subsystems is an act of mutual recognition, quantified by Ψ." },
@@ -16,16 +16,15 @@ function PaperSection({ section, index }) {
       <button onClick={() => setOpen(o => !o)} style={{
         width: "100%", display: "flex", alignItems: "center", gap: S.xs,
         background: "none", border: "none", cursor: "pointer",
-        padding: `${S.sm} 0`,
-        borderBottom: `1px solid ${GOLD(open ? A.ghost : A.ghost)}`,
+        padding: `${S.sm} 0`, borderBottom: `1px solid ${GOLD(open ? A.ghost : A.ghost)}`,
         textAlign: "left",
       }}>
-        <span style={{ ...DISPLAY_STYLE, fontSize: S._2xs, color: GOLD(open ? A.phi : A.ghost), transition: `color 618ms ${EASE}`, flex: 1 }}>{section.title.toUpperCase()}</span>
-        <span style={{ fontSize: S._2xs, color: GOLD(open ? A.phi : A.ghost), transition: `all 618ms ${EASE}`, transform: open ? "rotate(180deg)" : "none", display: "inline-block" }}>▾</span>
+        <span style={{ ...DISPLAY_STYLE, fontSize: TEXT.caption, color: GOLD(open ? A.phi : A.ghost), transition: `color 382ms ${EASE}`, flex: 1 }}>{section.title.toUpperCase()}</span>
+        <span style={{ fontSize: TEXT.caption, color: GOLD(open ? A.phi : A.ghost), transition: `all 382ms ${EASE}`, transform: open ? "rotate(180deg)" : "none", display: "inline-block" }}>▾</span>
       </button>
       {open && (
         <div style={{ padding: `${S.md} 0`, animation: "fadeIn 382ms ease" }}>
-          <pre style={{ ...BODY_STYLE, fontWeight: 400, fontSize: S.sm, color: IVORY(A.phi), whiteSpace: "pre-wrap", wordWrap: "break-word", margin: 0 }}>{section.content}</pre>
+          <pre style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.label, color: IVORY(A.phi), whiteSpace: "pre-wrap", wordWrap: "break-word", margin: 0 }}>{section.content}</pre>
         </div>
       )}
     </div>
@@ -44,32 +43,33 @@ export default function PaperPage({ onBack }) {
       <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
         position: "fixed", top: S.md, left: S.md, zIndex: 99,
         background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE, fontSize: S.xs,
+        ...DISPLAY_STYLE, fontSize: TEXT.label,
         color: GOLD(backH ? A.full : A.phi),
         transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
       }}>← BACK</button>
 
-      <div style={{ width: "100%", maxWidth: "40rem", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: S._2xl }}>
-        <h1 style={{ ...DISPLAY_STYLE, fontSize: S.lg, color: GOLD(A.phi), textAlign: "center", animation: "fadeUp 618ms 100ms both ease", marginBottom: S._2xs }}>CONVERGENT RECOGNITION THEORY</h1>
-        <p style={{ ...ACCENT_STYLE, fontSize: S.sm, color: IVORY(A.ghost), textAlign: "center", animation: "fadeUp 618ms 236ms both ease", marginBottom: S.xs }}>A mathematical framework for self-recognizing systems</p>
+      <div style={{ width: "100%", maxWidth: "40rem", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "clamp(80px, 12vh, 120px)" }}>
+        <h1 style={{ ...DISPLAY_STYLE, fontSize: TEXT.heading, color: GOLD(A.phi), textAlign: "center", animation: "fadeUp 618ms 100ms both ease", marginBottom: S._2xs }}>CONVERGENT RECOGNITION THEORY</h1>
+        <p style={{ ...ACCENT_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost), textAlign: "center", animation: "fadeUp 618ms 236ms both ease", marginBottom: S.xs }}>A mathematical framework for self-recognizing systems</p>
 
-        {/* The equation — prominently displayed */}
+        {/* The equation — atmospheric display */}
         <div style={{
-          padding: `${S.md} ${S.lg}`,
-          background: `rgba(201,168,76,${A.ghost})`,
+          padding: `${S.lg} ${S.xl}`,
+          background: `rgba(201,168,76,0.04)`,
           border: `1px solid ${GOLD(A.ghost)}`,
-          borderRadius: S._3xs,
+          borderRadius: S._2xs,
           animation: "fadeUp 618ms 382ms both ease",
           marginBottom: S.lg, textAlign: "center",
           aspectRatio: "1.618 / 1",
           display: "flex", alignItems: "center", justifyContent: "center",
           maxWidth: "26rem", width: "100%",
+          boxShadow: `0 0 48px rgba(201,168,76,0.06), inset 0 0 24px rgba(201,168,76,0.02)`,
         }}>
           <div style={{
             ...DISPLAY_STYLE,
-            fontSize: S.xl,
+            fontSize: TEXT.hero,
             color: GOLD(A.phi),
-            textShadow: `0 0 ${S.md} rgba(201,168,76,${A.ghost})`,
+            textShadow: textGlow("201,168,76", 1),
           }}>Ψ = R₁₂ × G</div>
         </div>
 

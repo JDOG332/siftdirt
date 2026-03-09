@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { F, S, A, GOLD, IVORY, EASE, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE } from "./phi.js";
+import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow, boxGlow } from "./phi.js";
 
 const POEMS = [
   { key: "dol", title: "it's the rhythm of life", subtitle: "Heartbeats, hope, and hidden purposes", color: "220,160,160" },
@@ -17,20 +17,21 @@ function PoemCard({ poem, index, onSelect }) {
         width: "100%", maxWidth: "30rem",
         aspectRatio: "1.618 / 1",
         padding: S.lg,
-        background: hover ? `rgba(${rgb},${A.ghost})` : "transparent",
+        background: hover ? `rgba(${rgb},${A.ghost})` : `rgba(${rgb},0.04)`,
         border: `1px solid rgba(${rgb},${hover ? A.phi : A.ghost})`,
-        borderRadius: S._3xs,
-        cursor: "pointer",
+        borderRadius: S._2xs, cursor: "pointer",
         transition: `all 618ms ${EASE}`,
         animation: `fadeUp 618ms ${236 + index * 236}ms both ease`,
-        boxShadow: hover ? `0 0 ${S.xl} rgba(${rgb},${A.ghost})` : "none",
+        boxShadow: hover ? boxGlow(rgb, 1) : "none",
         display: "flex", flexDirection: "column",
         gap: S.xs, alignItems: "center",
         justifyContent: "center", textAlign: "center",
+        position: "relative", overflow: "hidden",
       }}
     >
-      <h2 style={{ ...ACCENT_STYLE, fontSize: S.lg, color: IVORY(hover ? A.full : A.phi), transition: `color 618ms ${EASE}` }}>{poem.title}</h2>
-      <p style={{ ...BODY_STYLE, fontSize: S.sm, color: `rgba(${rgb},${hover ? A.phi : A.ghost})`, transition: `color 618ms ${EASE}` }}>{poem.subtitle}</p>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: `linear-gradient(90deg, transparent, rgba(${rgb},${hover ? A.phi : A.ghost}), transparent)`, transition: `background 618ms` }} />
+      <h2 style={{ ...ACCENT_STYLE, fontSize: TEXT.title, color: IVORY(hover ? A.full : A.phi), transition: `color 618ms` }}>{poem.title}</h2>
+      <p style={{ ...BODY_STYLE, fontSize: TEXT.label, color: `rgba(${rgb},${hover ? A.phi : A.ghost})`, transition: `color 618ms` }}>{poem.subtitle}</p>
     </div>
   );
 }
@@ -47,14 +48,12 @@ export default function PoemsPage({ onBack, onSelectPoem }) {
       <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
         position: "fixed", top: S.md, left: S.md, zIndex: 99,
         background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE, fontSize: S.xs,
+        ...DISPLAY_STYLE, fontSize: TEXT.label,
         color: GOLD(backH ? A.full : A.phi),
-        transition: `color 618ms ${EASE}`,
-        padding: `${S.xs} ${S.sm}`,
+        transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
       }}>← BACK</button>
-
-      <div style={{ width: "100%", maxWidth: "34rem", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: S._2xl, gap: S.md }}>
-        <h1 style={{ ...DISPLAY_STYLE, fontSize: S.xl, color: GOLD(A.phi), animation: "fadeUp 618ms 100ms both ease" }}>POEMS</h1>
+      <div style={{ width: "100%", maxWidth: "34rem", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "clamp(80px, 14vh, 130px)", gap: S.md }}>
+        <h1 style={{ ...DISPLAY_STYLE, fontSize: TEXT.hero, color: GOLD(A.phi), animation: "fadeUp 618ms 100ms both ease", textShadow: textGlow("201,168,76", A.phi) }}>POEMS</h1>
         {POEMS.map((p, i) => <PoemCard key={p.key} poem={p} index={i} onSelect={onSelectPoem} />)}
       </div>
     </div>

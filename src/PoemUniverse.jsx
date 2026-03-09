@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { POEMS, ASK_POEMS, KAL_POEMS } from "./data.js";
-import { F, S, A, GOLD, IVORY, EASE, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE } from "./phi.js";
+import { S, A, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE } from "./phi.js";
 
 const POEM_MAP = {
   ask: { lines: ASK_POEMS, title: "death or life", rgb: "190,140,220" },
@@ -12,8 +12,7 @@ function PoemCanvas({ rgb }) {
   const canvasRef = useRef(null);
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    let W, H, raf;
+    const ctx = canvas.getContext("2d"); let W, H, raf;
     const [r, g, b] = rgb.split(",").map(Number);
     function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
     resize(); window.addEventListener("resize", resize);
@@ -24,7 +23,7 @@ function PoemCanvas({ rgb }) {
         m.y -= m.speed; m.phase += 0.01;
         if (m.y < -10) { m.y = H + 10; m.x = Math.random() * W; }
         ctx.beginPath(); ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r},${g},${b},${0.236 + Math.sin(m.phase) * 0.236})`; ctx.fill();
+        ctx.fillStyle = `rgba(${r},${g},${b},${A.ghost + Math.sin(m.phase) * A.ghost})`; ctx.fill();
       });
       raf = requestAnimationFrame(frame);
     }
@@ -43,10 +42,7 @@ export default function PoemUniverse({ poem, onBack }) {
   useEffect(() => { const t = setTimeout(() => setVisible(true), 236); return () => clearTimeout(t); }, []);
 
   const stanzas = []; let cur = [];
-  lines.forEach(line => {
-    if (line === "————") { if (cur.length) { stanzas.push(cur); cur = []; } }
-    else cur.push(line);
-  });
+  lines.forEach(line => { if (line === "————") { if (cur.length) { stanzas.push(cur); cur = []; } } else cur.push(line); });
   if (cur.length) stanzas.push(cur);
 
   return (
@@ -55,7 +51,7 @@ export default function PoemUniverse({ poem, onBack }) {
       <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
         position: "fixed", top: S.md, left: S.md, zIndex: 99,
         background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE, fontSize: S.xs,
+        ...DISPLAY_STYLE, fontSize: TEXT.label,
         color: `rgba(${rgb},${backH ? A.full : A.phi})`,
         transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
       }}>← BACK</button>
@@ -63,21 +59,20 @@ export default function PoemUniverse({ poem, onBack }) {
       <div style={{
         position: "relative", zIndex: 1,
         display: "flex", flexDirection: "column", alignItems: "center",
-        padding: `0 ${S.md}`, paddingTop: S._2xl, paddingBottom: S._2xl,
+        padding: `0 ${S.md}`, paddingTop: "clamp(100px, 16vh, 160px)", paddingBottom: S._2xl,
         opacity: visible ? A.full : 0, transition: `opacity 1.618s ${EASE}`,
       }}>
-        <h1 style={{ ...ACCENT_STYLE, fontSize: S.lg, color: IVORY(A.phi), textAlign: "center", marginBottom: S._2xl, textShadow: `0 0 ${S.md} rgba(${rgb},${A.ghost})` }}>{title}</h1>
-
+        <h1 style={{ ...ACCENT_STYLE, fontSize: TEXT.title, color: IVORY(A.phi), textAlign: "center", marginBottom: S._2xl, textShadow: `0 0 28px rgba(${rgb},${A.ghost})` }}>{title}</h1>
         {stanzas.map((stanza, si) => (
           <div key={si} style={{ marginBottom: S.lg, textAlign: "center", animation: `fadeUp 618ms ${382 + si * 236}ms both ease` }}>
             {stanza.map((line, li) => (
               <div key={li} style={{
-                ...BODY_STYLE,
-                fontWeight: 400,
-                fontSize: line === "" ? 0 : line === "&" ? S.sm : S.md,
+                ...BODY_STYLE, fontWeight: 400,
+                fontSize: line === "" ? 0 : line === "&" ? TEXT.label : TEXT.heading,
                 color: line === "&" ? `rgba(${rgb},${A.ghost})` : IVORY(A.phi),
                 lineHeight: 1.618,
                 minHeight: line === "" ? S.md : "auto",
+                textShadow: line !== "" && line !== "&" ? `0 0 18px rgba(232,228,210,0.12)` : "none",
                 whiteSpace: "pre-wrap",
               }}>{line || "\u00A0"}</div>
             ))}
