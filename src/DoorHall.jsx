@@ -143,28 +143,50 @@ function SongRow({ song, rgb }) {
   ];
   return (
     <div style={{
-      background: open ? `rgba(${rgb},0.08)` : `rgba(${rgb},0.04)`,
-      border: `1px solid rgba(${rgb},${open ? A.phi : A.ghost})`,
+      background: `rgba(${rgb},0.12)`,
+      border: `1px solid rgba(${rgb},${A.phi})`,
       borderRadius: S._3xs,
       transition: `all 382ms ${EASE}`,
-      overflow: "hidden",
     }}>
       <div onClick={() => setOpen(o => !o)} style={{
-        display: "flex", alignItems: "center", gap: S._2xs, cursor: "pointer",
-        padding: `${S.xs} ${S.sm}`,
+        display: "flex", alignItems: "center", gap: S.xs, cursor: "pointer",
+        padding: `${S.sm} ${S.sm}`,
       }}>
         <span style={{ fontSize: TEXT.body, lineHeight: 1, flexShrink: 0 }}>♪</span>
-        <span style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(open ? A.full : A.phi), flex: 1, transition: `color 382ms ${EASE}` }}>{song.title}</span>
-        <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.phi), flexShrink: 0 }}>{song.artist}</span>
-        <span style={{ fontSize: TEXT.label, color: `rgba(${rgb},${open ? A.phi : A.ghost})`, transform: open ? "rotate(180deg)" : "none", display: "inline-block", transition: `all 382ms ${EASE}`, flexShrink: 0 }}>▾</span>
+        <span style={{
+          ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body,
+          color: IVORY(A.full),
+          flex: 1,
+        }}>{song.title}</span>
+        <span style={{
+          ...BODY_STYLE, fontSize: TEXT.label,
+          color: IVORY(A.phi),
+          flexShrink: 0,
+        }}>{song.artist}</span>
+        <span style={{
+          fontSize: TEXT.label,
+          color: `rgba(${rgb},${A.phi})`,
+          transform: open ? "rotate(180deg)" : "none",
+          display: "inline-block",
+          transition: `all 382ms ${EASE}`,
+          flexShrink: 0,
+        }}>▾</span>
       </div>
       {open && (
-        <div style={{ display: "flex", gap: S._2xs, padding: `${S._2xs} ${S.sm} ${S.xs}`, flexWrap: "wrap", animation: "fadeIn 382ms ease", borderTop: `1px solid rgba(${rgb},${A.ghost})` }}>
+        <div style={{
+          display: "flex", gap: S.xs, padding: `${S.xs} ${S.sm} ${S.sm}`,
+          flexWrap: "wrap", animation: "fadeIn 382ms ease",
+          borderTop: `1px solid rgba(${rgb},${A.ghost})`,
+        }}>
           {links.map(l => (
             <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer" style={{
-              ...DISPLAY_STYLE, fontSize: TEXT.caption, letterSpacing: "0.06em",
-              color: `rgba(${rgb},${A.phi})`, textDecoration: "none",
-              padding: `${S._3xs} ${S._2xs}`, border: `1px solid rgba(${rgb},${A.ghost})`, borderRadius: S._3xs,
+              ...DISPLAY_STYLE, fontSize: TEXT.label, letterSpacing: "0.06em",
+              color: `rgba(${rgb},${A.full})`, textDecoration: "none",
+              padding: `${S._2xs} ${S.xs}`,
+              border: `1px solid rgba(${rgb},${A.phi})`,
+              borderRadius: S._3xs,
+              background: `rgba(${rgb},0.08)`,
+              transition: `all 382ms ${EASE}`,
             }}>{l.label}</a>
           ))}
         </div>
@@ -278,7 +300,7 @@ function TopicCard({ card, rgb, index }) {
           {/* MUSIC */}
           {hasSongs && (
             <ContentSection title="MUSIC" rgb={rgb}>
-              <div style={{ display: "flex", flexDirection: "column", gap: S._2xs }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: S.sm }}>
                 {card.songs.map((s, i) => <SongRow key={i} song={s} rgb={rgb} />)}
               </div>
             </ContentSection>
