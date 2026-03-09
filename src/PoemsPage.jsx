@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow, boxGlow } from "./phi.js";
 
 const POEMS = [
-  { key: "dol", title: "it's the rhythm of life", subtitle: "Heartbeats, hope, and hidden purposes", color: "220,160,160" },
-  { key: "rol", title: "death or life", subtitle: "Dance all day and never stop", color: "190,140,220" },
+  { key: "dol", title: "death or life", subtitle: "Dance all day and never stop", color: "190,140,220" },
+  { key: "rol", title: "it's the rhythm of life", subtitle: "Heartbeats, hope, and hidden purposes", color: "220,160,160" },
   { key: "kal", title: "kaleidoscope sea", subtitle: "Shatter your glass and break down your walls", color: "100,180,220" },
 ];
 
