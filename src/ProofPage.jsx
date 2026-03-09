@@ -475,7 +475,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
           animation: "fadeUp 1s 100ms both ease",
           marginBottom: S.xs,
           textShadow: textGlow("201,168,76", 0.618),
-        }}>SIFT THE DIRT</h1>
+        }}>SEARCH & EXPLORE</h1>
 
         {/* Subtitle */}
         <p style={{
