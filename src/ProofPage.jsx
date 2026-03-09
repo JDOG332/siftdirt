@@ -530,10 +530,13 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
             }}
             onFocus={(e) => {
               e.target.style.borderColor = GOLD(A.phi);
-              // Snap search to top so results fill the screen as you type
+              // Snap search to top so pyramid + results fill the screen below
               setTimeout(() => {
-                e.target.scrollIntoView({ behavior: "smooth", block: "start" });
-              }, 100);
+                const rect = e.target.getBoundingClientRect();
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                // Position input 1rem from top of viewport
+                window.scrollTo({ top: scrollTop + rect.top - 16, behavior: "smooth" });
+              }, 50);
             }}
             onBlur={(e) => e.target.style.borderColor = GOLD(A.ghost)}
           />
