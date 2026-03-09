@@ -1,84 +1,246 @@
-import React, { useState, useEffect, useRef } from "react";
+/**
+ * POEM UNIVERSE — Exact port of educationrevelation depth-2 experience
+ *
+ * poem="ask"     → Death or Life  → DiamondGenesisCanvas  + ASK_POEMS scroll
+ * poem="explore" → Rhythm of Life → DreamMultiverseCanvas + POEMS scroll
+ * poem="kal"     → Kaleidoscope Sea → KaleidoscopeSeaCanvas + KAL_POEMS scroll
+ */
+import { useState, useEffect, useRef } from "react";
+import DreamMultiverseCanvas from "./components/dreamMultiverse.jsx";
+import DiamondGenesisCanvas  from "./components/diamondGenesis.jsx";
+import KaleidoscopeSeaCanvas from "./components/kaleidoscopeSea.jsx";
 import { POEMS, ASK_POEMS, KAL_POEMS } from "./data.js";
-import { S, A, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE } from "./phi.js";
 
-const POEM_MAP = {
-  ask: { lines: ASK_POEMS, title: "death or life", rgb: "190,140,220" },
-  explore: { lines: POEMS, title: "it's the rhythm of life", rgb: "220,160,160" },
-  kal: { lines: KAL_POEMS, title: "kaleidoscope sea", rgb: "100,180,220" },
-};
+const PHI    = 1.618033988749895;
+const PHI_INV= 0.6180339887498949;
+const PHI2   = PHI * PHI;
+const CINZEL = "'Cinzel', serif";
+const CORM   = "'Cormorant Garamond', serif";
+const GOLD   = (a) => `rgba(201,168,76,${a})`;
 
-function PoemCanvas({ rgb }) {
-  const canvasRef = useRef(null);
-  useEffect(() => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d"); let W, H, raf;
-    const [r, g, b] = rgb.split(",").map(Number);
-    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-    resize(); window.addEventListener("resize", resize);
-    const motes = Array.from({ length: 62 }, () => ({ x: Math.random() * 2000, y: Math.random() * 2000, size: 0.618 + Math.random() * 1.618, speed: 0.1 + Math.random() * 0.236, phase: Math.random() * Math.PI * 2 }));
-    function frame() {
-      ctx.fillStyle = `rgba(3,3,10,${A.ghost})`; ctx.fillRect(0, 0, W, H);
-      motes.forEach(m => {
-        m.y -= m.speed; m.phase += 0.01;
-        if (m.y < -10) { m.y = H + 10; m.x = Math.random() * W; }
-        ctx.beginPath(); ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r},${g},${b},${A.ghost + Math.sin(m.phase) * A.ghost})`; ctx.fill();
-      });
-      raf = requestAnimationFrame(frame);
-    }
-    ctx.fillStyle = "#03030a"; ctx.fillRect(0, 0, W, H);
-    raf = requestAnimationFrame(frame);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, [rgb]);
-  return <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, width: "100%", height: "100%", zIndex: 0 }} />;
+// ── Back button ──────────────────────────────────────────────────
+function BackButton({ onBack }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onBack}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        position:"fixed", top:28, left:28, zIndex:9999,
+        background:"none",
+        border:"none",
+        color: hover ? GOLD(1.0) : GOLD(0.72),
+        fontFamily: CINZEL, fontSize:16, fontWeight:600,
+        letterSpacing:"0.38em", padding:"10px 16px",
+        cursor:"pointer", transition:"color 618ms ease",
+      }}
+    >← BACK</button>
+  );
 }
 
-export default function PoemUniverse({ poem, onBack }) {
-  const cfg = POEM_MAP[poem]; if (!cfg) return null;
-  const { lines, title, rgb } = cfg;
-  const [backH, setBackH] = useState(false);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setVisible(true), 236); return () => clearTimeout(t); }, []);
+// KalPlaceholder removed — full canvas implemented
 
-  const stanzas = []; let cur = [];
-  lines.forEach(line => { if (line === "————") { if (cur.length) { stanzas.push(cur); cur = []; } } else cur.push(line); });
-  if (cur.length) stanzas.push(cur);
+// ── Poem Wheel — exact port of PoemWheel from educationrevelation ─
+function PoemWheel({ userPath, veilParted }) {
+  const wheelRef  = useRef(null);
+  const scrollRef = useRef(null);
+  const frameRef  = useRef(null);
+
+  useEffect(() => {
+    if (!wheelRef.current || !scrollRef.current) return;
+    const container = wheelRef.current;
+    const scroller  = scrollRef.current;
+    const viewH     = container.clientHeight;
+
+    const activePoems   = userPath === "ask" ? ASK_POEMS
+                     : userPath === "kal" ? KAL_POEMS
+                     : POEMS;
+    const oneCycleCount = activePoems.length;
+    let oneCycleH = 0;
+    const kids = scroller.children;
+    for (let c = 0; c < oneCycleCount && c < kids.length; c++) {
+      oneCycleH += kids[c].offsetHeight;
+    }
+
+    const cycleDuration = Math.round(PHI * PHI * 23.6) * 1000;
+    const speed = oneCycleH / cycleDuration;
+
+    const titleH = kids[0] ? kids[0].offsetHeight : 0;
+    let y = (viewH - titleH) / 2;
+    scroller.style.transform = `translateY(${y}px)`;
+    scroller.style.opacity   = "0";
+
+    const firstTitle = kids[0];
+    for (let c = 1; c < kids.length; c++) kids[c].style.opacity = "0";
+
+    if (firstTitle) {
+      firstTitle.style.color = "rgba(255,255,255,0.9)";
+      firstTitle.style.WebkitTextFillColor = "rgba(255,255,255,0.9)";
+      firstTitle.style.background = "none";
+      firstTitle.style.filter  = "blur(30px)";
+      firstTitle.style.transform = "scale(0.05)";
+    }
+
+    const CRYSTALLIZE_DUR = 4236;
+    let lastTime = null;
+
+    const waitForVeil = () => {
+      if (!veilParted) { frameRef.current = requestAnimationFrame(waitForVeil); return; }
+
+      scroller.style.opacity = "1";
+
+      if (firstTitle) {
+        firstTitle.style.transition =
+          `filter ${CRYSTALLIZE_DUR}ms cubic-bezier(0.23,1,0.32,1),` +
+          `transform ${CRYSTALLIZE_DUR}ms cubic-bezier(0.23,1,0.32,1),` +
+          `color ${CRYSTALLIZE_DUR}ms ease,` +
+          `-webkit-text-fill-color ${CRYSTALLIZE_DUR}ms ease,` +
+          `background ${CRYSTALLIZE_DUR}ms ease`;
+        firstTitle.style.filter    = "blur(0px)";
+        firstTitle.style.transform = "scale(1)";
+        firstTitle.style.background =
+          "linear-gradient(90deg,rgba(201,168,76,0.5) 0%,rgba(255,245,220,0.95) 25%,rgba(201,168,76,1) 50%,rgba(255,245,220,0.95) 75%,rgba(201,168,76,0.5) 100%)";
+        firstTitle.style.backgroundSize         = "200% 100%";
+        firstTitle.style.WebkitBackgroundClip   = "text";
+        firstTitle.style.WebkitTextFillColor    = "transparent";
+        firstTitle.style.backgroundClip         = "text";
+      }
+
+      setTimeout(() => {
+        for (let c = 1; c < kids.length; c++) {
+          kids[c].style.transition = "opacity 1.618s ease";
+          kids[c].style.opacity    = "1";
+        }
+        frameRef.current = requestAnimationFrame(scroll);
+      }, CRYSTALLIZE_DUR);
+    };
+
+    function scroll(now) {
+      if (!lastTime) lastTime = now;
+      const dt = Math.min(now - lastTime, 50);
+      lastTime = now;
+      y -= speed * dt;
+      if (y < viewH - oneCycleH * 2) y += oneCycleH;
+      scroller.style.transform = `translateY(${y}px)`;
+      frameRef.current = requestAnimationFrame(scroll);
+    }
+
+    frameRef.current = requestAnimationFrame(waitForVeil);
+    return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
+  }, [veilParted]);
+
+  const poemFontMin = Math.round(17 * PHI);
+  const poemFontMax = Math.round(17 * PHI * PHI);
+  const activePoems = userPath === "ask" ? ASK_POEMS
+                     : userPath === "kal" ? KAL_POEMS
+                     : POEMS;
+  const bookendTitle = userPath === "ask" ? "death or life"
+                    : userPath === "kal" ? "kaleidoscope sea"
+                    : "it's the rhythm of life";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#03030a" }}>
-      <PoemCanvas rgb={rgb} />
-      <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
-        position: "fixed", top: S.md, left: S.md, zIndex: 99,
-        background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE, fontSize: TEXT.label,
-        color: `rgba(${rgb},${backH ? A.full : A.phi})`,
-        transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
-      }}>← BACK</button>
-
+    <div ref={wheelRef} style={{
+      position:"fixed", top:0, left:0, width:"100%", height:"100%",
+      zIndex:5001, overflow:"hidden", pointerEvents:"none",
+    }}>
+      {/* Top fade */}
       <div style={{
-        position: "relative", zIndex: 1,
-        display: "flex", flexDirection: "column", alignItems: "center",
-        padding: `0 ${S.md}`, paddingTop: "clamp(100px, 16vh, 160px)", paddingBottom: S._2xl,
-        opacity: visible ? A.full : 0, transition: `opacity 1.618s ${EASE}`,
+        position:"absolute", top:0, left:0, width:"100%", height:"38.2%",
+        background:"linear-gradient(to bottom,rgba(3,3,6,0.7) 0%,rgba(3,3,6,0.5) 30%,rgba(3,3,6,0) 100%)",
+        zIndex:2, pointerEvents:"none",
+      }}/>
+      {/* Bottom fade */}
+      <div style={{
+        position:"absolute", bottom:0, left:0, width:"100%", height:"38.2%",
+        background:"linear-gradient(to top,rgba(3,3,6,0.7) 0%,rgba(3,3,6,0.5) 30%,rgba(3,3,6,0) 100%)",
+        zIndex:2, pointerEvents:"none",
+      }}/>
+
+      {/* Scrolling poem — 3 copies for seamless infinite scroll */}
+      <div ref={scrollRef} style={{
+        position:"absolute", left:0, width:"100%",
+        display:"flex", flexDirection:"column", alignItems:"center",
+        padding:"0 5%",
       }}>
-        <h1 style={{ ...ACCENT_STYLE, fontSize: TEXT.title, color: IVORY(A.phi), textAlign: "center", marginBottom: S._2xl, textShadow: `0 0 28px rgba(${rgb},${A.ghost})` }}>{title}</h1>
-        {stanzas.map((stanza, si) => (
-          <div key={si} style={{ marginBottom: S.lg, textAlign: "center", animation: `fadeUp 618ms ${382 + si * 236}ms both ease` }}>
-            {stanza.map((line, li) => (
-              <div key={li} style={{
-                ...BODY_STYLE, fontWeight: 400,
-                fontSize: line === "" ? 0 : line === "&" ? TEXT.label : TEXT.heading,
-                color: line === "&" ? `rgba(${rgb},${A.ghost})` : IVORY(A.phi),
-                lineHeight: 1.618,
-                minHeight: line === "" ? S.md : "auto",
-                textShadow: line !== "" && line !== "&" ? `0 0 18px rgba(232,228,210,0.12)` : "none",
-                whiteSpace: "pre-wrap",
-              }}>{line || "\u00A0"}</div>
-            ))}
-          </div>
-        ))}
+        {[...activePoems, ...activePoems, ...activePoems].map((line, i) => {
+          if (line === "") {
+            return <div key={i} style={{ height:`${Math.round(38 * PHI)}px` }}/>;
+          }
+          const isBookend = (line === bookendTitle);
+          const parts = line.split("\n");
+          return (
+            <div key={i} style={{
+              fontFamily: isBookend ? CINZEL : CORM,
+              fontSize: isBookend
+                ? `clamp(${Math.round(poemFontMin*PHI)}px,${5.5*PHI}vw,${Math.round(poemFontMax*PHI)}px)`
+                : `clamp(${poemFontMin}px,5.5vw,${poemFontMax}px)`,
+              fontStyle:   "normal",
+              fontWeight:  isBookend ? 500 : 400,
+              color:       isBookend ? "rgba(201,168,76,0.9)" : "rgba(232,232,240,0.85)",
+              textAlign:   "center",
+              lineHeight:  1.5,
+              letterSpacing: isBookend ? 4 : 0.8,
+              marginBottom: Math.round(8 * PHI),
+              maxWidth:    "618px",
+              ...(isBookend ? {
+                background:"linear-gradient(90deg,rgba(201,168,76,0.5) 0%,rgba(255,245,220,0.95) 25%,rgba(201,168,76,1) 50%,rgba(255,245,220,0.95) 75%,rgba(201,168,76,0.5) 100%)",
+                backgroundSize:"200% 100%",
+                WebkitBackgroundClip:"text",
+                WebkitTextFillColor:"transparent",
+                backgroundClip:"text",
+                animation:"shimmerLine 5s ease-in-out infinite",
+                filter:"drop-shadow(0 0 20px rgba(201,168,76,0.15)) drop-shadow(0 0 40px rgba(201,168,76,0.06))",
+              } : {}),
+            }}>
+              {parts.map((p,j) => <span key={j}>{j>0&&<br/>}{p}</span>)}
+            </div>
+          );
+        })}
       </div>
+    </div>
+  );
+}
+
+// ── Main PoemUniverse ────────────────────────────────────────────
+export default function PoemUniverse({ poem, onBack }) {
+  const [veilParted, setVeilParted] = useState(false);
+
+  // "kal" falls through to full canvas below
+
+  return (
+    <div style={{ position:"fixed", inset:0, background:"#03030a", zIndex:1000 }}>
+      <BackButton onBack={onBack} />
+
+      {/* Grain overlay */}
+      <div style={{
+        position:"fixed", inset:0, pointerEvents:"none", zIndex:2,
+        opacity:0.025,
+        backgroundImage:"url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+        backgroundRepeat:"repeat",
+        backgroundSize:"128px 128px",
+      }}/>
+
+      {/* Vignette */}
+      <div style={{
+        position:"fixed", inset:0, pointerEvents:"none", zIndex:1,
+        background:"radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,0.4) 65%,rgba(0,0,0,0.7) 85%,rgba(0,0,0,0.85) 100%)",
+      }}/>
+
+      {/* Animation canvas — fills entire background */}
+      <div style={{
+        position:"fixed", inset:0, zIndex:0,
+      }}>
+        {poem === "ask"
+          ? <DiamondGenesisCanvas    depth={2} onVeilParted={() => setVeilParted(true)} />
+          : poem === "explore"
+          ? <DreamMultiverseCanvas   depth={2} onVeilParted={() => setVeilParted(true)} />
+          : <KaleidoscopeSeaCanvas            onVeilParted={() => setVeilParted(true)} />
+        }
+      </div>
+
+      {/* Poem wheel — scrolls over the animation */}
+      <PoemWheel userPath={poem} veilParted={veilParted} />
     </div>
   );
 }
