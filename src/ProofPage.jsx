@@ -532,7 +532,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
                 const el = document.getElementById("search-anchor");
                 if (el) {
                   const top = el.getBoundingClientRect().top + window.scrollY - 8;
-                  window.scrollTo({ top, behavior: "smooth" });
+                  window.scrollTo({ top, behavior: "instant" });
                 }
               });
             }}
