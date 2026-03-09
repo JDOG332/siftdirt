@@ -399,7 +399,18 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           </Section>
         )}
 
-        {/* ── FIVE SENSES ── */}
+        {/* ── EXPLORE FURTHER — Wikipedia powered summaries ── */}
+        {hasLinks && (
+          <Section title="EXPLORE FURTHER" rgb={rgb} delay={618}>
+            <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
+              {activeCard.links.map((link, i) => (
+                <WikiCard key={i} label={link.label} url={link.url} rgb={rgb} index={i} />
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* ── SIX SENSES ── */}
         {hasSenses && (
           <Section title="SIX SENSES" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
@@ -410,23 +421,12 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           </Section>
         )}
 
-        {/* ── LISTEN ── */}
+        {/* ── MUSIC ── */}
         {hasSongs && (
           <Section title="MUSIC" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {activeCard.songs.map((s, i) => (
                 <SongRow key={i} song={s} rgb={rgb} />
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {/* ── EXPLORE FURTHER — Wikipedia powered summaries ── */}
-        {hasLinks && (
-          <Section title="EXPLORE FURTHER" rgb={rgb} delay={618}>
-            <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
-              {activeCard.links.map((link, i) => (
-                <WikiCard key={i} label={link.label} url={link.url} rgb={rgb} index={i} />
               ))}
             </div>
           </Section>

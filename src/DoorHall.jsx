@@ -288,6 +288,17 @@ function TopicCard({ card, rgb, index }) {
             </ContentSection>
           )}
 
+          {/* EXPLORE FURTHER — Wikipedia powered summaries */}
+          {hasLinks && (
+            <ContentSection title="EXPLORE FURTHER" rgb={rgb}>
+              <div style={{ display: "flex", flexDirection: "column", gap: S._2xs }}>
+                {card.links.map((link, i) => (
+                  <WikiCard key={i} label={link.label} url={link.url} rgb={rgb} index={i} />
+                ))}
+              </div>
+            </ContentSection>
+          )}
+
           {/* SIX SENSES */}
           {hasSenses && (
             <ContentSection title="SIX SENSES" rgb={rgb}>
@@ -302,17 +313,6 @@ function TopicCard({ card, rgb, index }) {
             <ContentSection title="MUSIC" rgb={rgb}>
               <div style={{ display: "flex", flexDirection: "column", gap: S.sm }}>
                 {card.songs.map((s, i) => <SongRow key={i} song={s} rgb={rgb} />)}
-              </div>
-            </ContentSection>
-          )}
-
-          {/* EXPLORE FURTHER — Wikipedia powered summaries */}
-          {hasLinks && (
-            <ContentSection title="EXPLORE FURTHER" rgb={rgb}>
-              <div style={{ display: "flex", flexDirection: "column", gap: S._2xs }}>
-                {card.links.map((link, i) => (
-                  <WikiCard key={i} label={link.label} url={link.url} rgb={rgb} index={i} />
-                ))}
               </div>
             </ContentSection>
           )}
