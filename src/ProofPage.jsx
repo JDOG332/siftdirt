@@ -105,10 +105,13 @@ function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
   const rowGap = Math.round(gap * 1.1);
   const emojiSz = Math.round(cardH * 0.38);
 
-  function labelSize(name) {
+  // Label size per ROW — uniform within each row, sized by the longest name
+  // This ensures visual symmetry: every block in a row has identical typography
+  const rowLabelSizes = TETRACTYS.map((row) => {
+    const longest = Math.max(...row.map(d => d.name.length));
     const base = Math.round(cardW * 0.10);
-    return Math.max(8, Math.round(base * Math.sqrt(8 / Math.max(8, name.length))));
-  }
+    return Math.max(8, Math.round(base * Math.sqrt(8 / Math.max(8, longest))));
+  });
 
   return (
     <div style={{
@@ -127,6 +130,7 @@ function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
             const borOp = hasScore ? Math.max(0.22, pct / 100 * 0.6) : 0.30;
             const txtOp = hasScore ? Math.max(0.70, Math.min(1.0, pct / 100 * 1.4)) : 0.90;
             const emjOp = hasScore ? Math.max(0.75, Math.min(1.0, pct / 60)) : 0.95;
+            const rowFontSize = rowLabelSizes[ri];
 
             return (
               <div key={door.key}
@@ -176,11 +180,11 @@ function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
                   flexShrink: 0,
                 }}>{door.emoji}</div>
 
-                {/* Label — room to breathe in wider blocks */}
+                {/* Label — uniform size per row for visual symmetry */}
                 <div style={{
                   fontFamily: F.display,
                   fontWeight: 900,
-                  fontSize: labelSize(door.name),
+                  fontSize: rowFontSize,
                   letterSpacing: "0.04em",
                   color: `rgba(${rgb},${txtOp})`,
                   textAlign: "center",
