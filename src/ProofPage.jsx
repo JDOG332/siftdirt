@@ -212,18 +212,10 @@ function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
   );
 }
 
-// ─── SEARCH RESULT CARD ──────────────────────────────────────
-function ResultCard({ result, index, onClick }) {
+// ─── SEARCH RESULT: TOPIC CARD ───────────────────────────────
+function CardResult({ result, index, onClick }) {
   const [hover, setHover] = useState(false);
-  const isCard = result.type === "card";
-  const rgb = isCard ? (DOOR_COLORS[result.doorName] || "201,168,76") : "201,168,76";
-  const title = isCard
-    ? (result.card?.title || "Untitled")
-    : (result.node?.truth || result.node?.dare || "Untitled");
-
-  const subtitle = isCard
-    ? (result.card?.simple || "")
-    : (result.node?.dare || result.node?.path || "");
+  const rgb = DOOR_COLORS[result.doorName] || "201,168,76";
 
   return (
     <div onClick={onClick}
@@ -244,8 +236,8 @@ function ResultCard({ result, index, onClick }) {
         ...DISPLAY_STYLE, fontSize: TEXT.caption,
         color: `rgba(${rgb},${A.phi})`,
       }}>
-        {isCard ? `${result.doorEmoji} ${result.doorName}` : "✦ MIRROR"}
-        {isCard && result.subName && (
+        {result.doorEmoji} {result.doorName}
+        {result.subName && (
           <span style={{ ...BODY_STYLE, fontSize: TEXT.caption, color: IVORY(A.ghost), marginLeft: S.xs }}>{result.subName}</span>
         )}
       </span>
@@ -254,9 +246,108 @@ function ResultCard({ result, index, onClick }) {
         fontSize: TEXT.body,
         color: IVORY(hover ? A.full : A.phi),
         transition: `color 382ms ${EASE}`,
-      }}>{title}</span>
-      {subtitle && (
-        <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost) }}>{subtitle}</span>
+      }}>{result.card?.title || "Untitled"}</span>
+      {result.card?.simple && (
+        <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost) }}>{result.card.simple}</span>
+      )}
+    </div>
+  );
+}
+
+// ─── SEARCH RESULT: MIRROR PROVOCATION ───────────────────────
+// These are wisdom seeds — philosophical truths + dares from the 9 layers.
+// They look and feel different from topic cards: centered, italic,
+// gold-bordered, with the truth as a quote and the dare as an invitation.
+function MirrorResult({ result, index, onClick }) {
+  const [hover, setHover] = useState(false);
+  const truth = result.node?.truth || "";
+  const dare = result.node?.dare || "";
+  const path = result.node?.path || "";
+  const depth = result.node?.depth || 0;
+
+  return (
+    <div onClick={onClick}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      style={{
+        padding: `${S.md} ${S.lg}`,
+        background: hover
+          ? `radial-gradient(ellipse at 50% 50%, rgba(201,168,76,0.08) 0%, rgba(201,168,76,0.02) 100%)`
+          : `radial-gradient(ellipse at 50% 50%, rgba(201,168,76,0.04) 0%, transparent 100%)`,
+        border: `1px solid ${GOLD(hover ? A.phi : A.ghost)}`,
+        borderRadius: S._2xs,
+        cursor: onClick ? "pointer" : "default",
+        transition: `all 618ms ${EASE}`,
+        animation: `fadeUp 618ms ${100 + index * 100}ms both ease`,
+        display: "flex", flexDirection: "column",
+        alignItems: "center",
+        textAlign: "center",
+        gap: S.xs,
+        boxShadow: hover
+          ? `0 0 38px rgba(201,168,76,0.10), 0 0 80px rgba(201,168,76,0.04), inset 0 0 38px rgba(201,168,76,0.03)`
+          : `0 0 18px rgba(201,168,76,0.03)`,
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Top + bottom shimmer lines */}
+      <div style={{
+        position: "absolute", top: 0, left: "23.6%", right: "23.6%", height: 1,
+        background: `linear-gradient(90deg, transparent, ${GOLD(hover ? A.phi : A.ghost)}, transparent)`,
+        transition: `background 618ms ${EASE}`,
+      }} />
+      <div style={{
+        position: "absolute", bottom: 0, left: "23.6%", right: "23.6%", height: 1,
+        background: `linear-gradient(90deg, transparent, ${GOLD(hover ? A.ghost : 0)}, transparent)`,
+        transition: `background 618ms ${EASE}`,
+      }} />
+
+      {/* Depth label */}
+      <span style={{
+        ...DISPLAY_STYLE,
+        fontSize: TEXT.caption,
+        letterSpacing: "0.236em",
+        color: GOLD(A.ghost),
+      }}>✦ LAYER {depth} ✦</span>
+
+      {/* The Truth — philosophical provocation, italic accent */}
+      {truth && (
+        <div style={{
+          ...ACCENT_STYLE,
+          fontSize: TEXT.body,
+          color: IVORY(hover ? A.full : A.phi),
+          transition: `color 618ms ${EASE}`,
+          maxWidth: "36rem",
+          textShadow: hover ? `0 0 18px rgba(232,228,210,0.12)` : "none",
+        }}>"{truth}"</div>
+      )}
+
+      {/* Gold divider */}
+      <div style={{
+        width: S.xl, height: 1,
+        background: `linear-gradient(90deg, transparent, ${GOLD(A.ghost)}, transparent)`,
+      }} />
+
+      {/* The Dare — the question that leads deeper */}
+      {dare && (
+        <div style={{
+          ...BODY_STYLE,
+          fontWeight: 400,
+          fontSize: TEXT.label,
+          color: GOLD(hover ? A.phi : A.ghost),
+          transition: `color 618ms ${EASE}`,
+          maxWidth: "30rem",
+        }}>{dare}</div>
+      )}
+
+      {/* Path whisper */}
+      {path && (
+        <span style={{
+          ...DISPLAY_STYLE,
+          fontSize: TEXT.caption,
+          color: GOLD(A.ghost),
+          letterSpacing: "0.06em",
+          marginTop: S._3xs,
+        }}>{path}</span>
       )}
     </div>
   );
@@ -447,7 +538,11 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: S.xs, marginBottom: S.lg }}>
             <div style={{ width: "100%", height: "1px", background: `linear-gradient(90deg, transparent, ${GOLD(A.ghost)}, transparent)`, marginBottom: S._2xs }} />
             {results.map((r, i) => (
-              <ResultCard key={`${r.type}-${i}`} result={r} index={i} onClick={() => handleResultClick(r)} />
+              r.type === "mirror"
+                ? <MirrorResult key={`mirror-${i}`} result={r} index={i}
+                    onClick={r.navDoorKey ? () => onDoorSelect(r.navDoorKey) : undefined} />
+                : <CardResult key={`card-${i}`} result={r} index={i}
+                    onClick={() => handleResultClick(r)} />
             ))}
           </div>
         )}
