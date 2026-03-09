@@ -378,7 +378,7 @@ export default function LandingPage({ onStart }) {
           letterSpacing: "0.06em",
           textAlign: "center",
           whiteSpace: "nowrap",
-        }}>"The universe observes itself through infinite lenses."</div>
+        }}>Connecting consciousness...</div>
 
         <button
           onMouseEnter={() => setEnterHover(true)}
