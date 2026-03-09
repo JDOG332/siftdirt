@@ -487,7 +487,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
           marginBottom: S.md,
           maxWidth: "30rem",
         }}>
-          Type anything that matters to you. Watch all ten doors respond.
+          Click to explore or type your search below.
         </p>
 
         {/* ── EXPLORE NAVIGATION — true paths to walk ── */}
