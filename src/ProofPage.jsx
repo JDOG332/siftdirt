@@ -457,7 +457,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
       <div style={{
         width: "100%", maxWidth: "40rem",
         display: "flex", flexDirection: "column", alignItems: "center",
-        paddingTop: S.md, position: "relative", zIndex: 1,
+        paddingTop: "clamp(72px, 11vh, 110px)", position: "relative", zIndex: 1,
       }}>
 
         {/* Flower of Life ornament — aligned with BACK button */}

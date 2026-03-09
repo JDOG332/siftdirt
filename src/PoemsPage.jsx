@@ -87,6 +87,7 @@ export default function PoemsPage({ onBack, onSelectPoem }) {
       display: "flex", flexDirection: "column", alignItems: "center",
       justifyContent: "center",
       padding: `${S.md} ${S.md}`,
+      paddingTop: "clamp(72px, 11vh, 110px)",
     }}>
       {/* Back */}
       <button onClick={onBack}
