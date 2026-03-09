@@ -195,7 +195,7 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
         <div style={{
           width: "100%",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(20rem, 1fr))",
+          gridTemplateColumns: "1fr",
           gap: S.sm,
           alignItems: "stretch",
         }}>
