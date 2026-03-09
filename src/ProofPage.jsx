@@ -233,22 +233,22 @@ function CardResult({ result, index, onClick }) {
       }}
     >
       <span style={{
-        ...DISPLAY_STYLE, fontSize: TEXT.caption,
-        color: `rgba(${rgb},${A.phi})`,
+        ...DISPLAY_STYLE, fontSize: TEXT.label,
+        color: `rgba(${rgb},${A.full})`,
       }}>
         {result.doorEmoji} {result.doorName}
         {result.subName && (
-          <span style={{ ...BODY_STYLE, fontSize: TEXT.caption, color: IVORY(A.ghost), marginLeft: S.xs }}>{result.subName}</span>
+          <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.phi), marginLeft: S.xs }}>{result.subName}</span>
         )}
       </span>
       <span style={{
         ...BODY_STYLE, fontWeight: 400,
-        fontSize: TEXT.body,
+        fontSize: TEXT.heading,
         color: IVORY(hover ? A.full : A.phi),
         transition: `color 382ms ${EASE}`,
       }}>{result.card?.title || "Untitled"}</span>
       {result.card?.simple && (
-        <span style={{ ...BODY_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost) }}>{result.card.simple}</span>
+        <span style={{ ...BODY_STYLE, fontSize: TEXT.body, color: IVORY(A.phi) }}>{result.card.simple}</span>
       )}
     </div>
   );
