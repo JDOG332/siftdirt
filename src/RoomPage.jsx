@@ -36,7 +36,7 @@ function SenseCard({ sense, rgb, index }) {
         }}>{sense.icon}</span>
         <span style={{
           ...DISPLAY_STYLE,
-          fontSize: TEXT.label,
+          fontSize: TEXT.heading,
           letterSpacing: "0.06em",
           color: `rgba(${rgb},${open ? A.full : A.phi})`,
           transition: `color 382ms`,
@@ -82,14 +82,14 @@ function SongRow({ song, rgb }) {
       }}>
         <span style={{
           ...BODY_STYLE, fontWeight: 400,
-          fontSize: TEXT.body,
+          fontSize: TEXT.heading,
           color: IVORY(open ? A.phi : A.ghost),
           flex: 1,
           transition: `color 250ms`,
         }}>♪ {song.title}</span>
         <span style={{
           ...BODY_STYLE, fontWeight: 300,
-          fontSize: TEXT.label,
+          fontSize: TEXT.body,
           color: IVORY(A.ghost),
         }}>{song.artist}</span>
         <span style={{
@@ -146,7 +146,7 @@ function Section({ title, rgb, children, defaultOpen = false, delay = 0 }) {
       }}>
         <span style={{
           ...DISPLAY_STYLE,
-          fontSize: TEXT.label,
+          fontSize: TEXT.heading,
           letterSpacing: "0.146em",
           color: `rgba(${rgb},${open ? A.phi : A.ghost})`,
           transition: `color 382ms`,
@@ -275,10 +275,10 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
         zIndex: 1,
       }}>
 
-        {/* Breadcrumb */}
+        {/* Breadcrumb — +2φ */}
         <div style={{
           ...DISPLAY_STYLE,
-          fontSize: TEXT.label,
+          fontSize: TEXT.heading,
           letterSpacing: "0.06em",
           color: `rgba(${rgb},${A.ghost})`,
           animation: "fadeUp 618ms 100ms both ease",
@@ -293,11 +293,11 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           textShadow: `0 0 28px rgba(232,228,210,0.12)`,
         }}>{activeCard.title}</h1>
 
-        {/* Subtitle */}
+        {/* Subtitle — +2φ */}
         {activeCard.subtitle && (
           <p style={{
             ...ACCENT_STYLE,
-            fontSize: TEXT.body,
+            fontSize: TEXT.title,
             color: `rgba(${rgb},${A.phi})`,
             animation: "fadeUp 618ms 382ms both ease",
           }}>{activeCard.subtitle}</p>
