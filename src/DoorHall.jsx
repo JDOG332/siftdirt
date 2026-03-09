@@ -155,7 +155,7 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
       {/* Content column */}
       <div style={{
         position: "relative", zIndex: 1,
-        width: "100%", maxWidth: "44rem",
+        width: "100%", maxWidth: "48rem",
         display: "flex", flexDirection: "column", alignItems: "center",
         paddingTop: "clamp(72px, 11vh, 110px)",
       }}>
@@ -195,7 +195,7 @@ export default function DoorHall({ doorKey, onBack, onRoomSelect }) {
         <div style={{
           width: "100%",
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(17rem, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(20rem, 1fr))",
           gap: S.sm,
           alignItems: "stretch",
         }}>
