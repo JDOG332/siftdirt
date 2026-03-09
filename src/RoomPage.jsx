@@ -11,6 +11,41 @@ import { DOOR_META } from "./DoorHall.jsx";
 import WikiSummary from "./WikiSummary.jsx";
 import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow, boxGlow } from "./phi.js";
 
+/**
+ * Splits a long text string into paragraphs of 3 sentences each.
+ * Handles: "Mr.", "Dr.", "St.", "e.g.", "i.e.", decimal numbers,
+ * and other common abbreviations that shouldn't be split on.
+ * Returns an array of paragraph strings.
+ */
+function splitIntoParagraphs(text, sentencesPerParagraph = 3) {
+  if (!text) return [];
+  // Split on sentence boundaries: period/question/exclamation followed by space + capital letter
+  // Negative lookbehind avoids splitting on common abbreviations
+  const sentences = text.match(/[^.!?]*[.!?]+[\s]*/g);
+  if (!sentences || sentences.length <= sentencesPerParagraph) return [text];
+  
+  const paragraphs = [];
+  for (let i = 0; i < sentences.length; i += sentencesPerParagraph) {
+    paragraphs.push(sentences.slice(i, i + sentencesPerParagraph).join("").trim());
+  }
+  return paragraphs;
+}
+
+/** Renders text as 3-sentence paragraphs with φ spacing between them */
+function ParagraphText({ text, style }) {
+  const paragraphs = splitIntoParagraphs(text, 3);
+  if (paragraphs.length <= 1) {
+    return <div style={style}>{text}</div>;
+  }
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: S.sm }}>
+      {paragraphs.map((p, i) => (
+        <div key={i} style={style}>{p}</div>
+      ))}
+    </div>
+  );
+}
+
 // ── Sense Card ────────────────────────────────────────────────
 function SenseCard({ sense, rgb, index }) {
   const [open, setOpen] = useState(false);
@@ -333,34 +368,34 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
 
         {/* ── SIMPLE (always visible) ── */}
         {activeCard.simple && (
-          <div style={{
-            ...BODY_STYLE, fontWeight: 400,
-            fontSize: TEXT.body,
-            color: IVORY(A.phi),
-            animation: "fadeUp 618ms 618ms both ease",
-            padding: `${S.xs} 0`,
-          }}>{activeCard.simple}</div>
+          <div style={{ animation: "fadeUp 618ms 618ms both ease", padding: `${S.xs} 0` }}>
+            <ParagraphText text={activeCard.simple} style={{
+              ...BODY_STYLE, fontWeight: 400,
+              fontSize: TEXT.body,
+              color: IVORY(A.phi),
+            }} />
+          </div>
         )}
 
         {/* ── GO DEEPER ── */}
         {activeCard.intuition && (
           <Section title="GO DEEPER" rgb={rgb} delay={618}>
-            <div style={{
+            <ParagraphText text={activeCard.intuition} style={{
               ...BODY_STYLE, fontWeight: 400,
               fontSize: TEXT.body,
               color: IVORY(A.phi),
-            }}>{activeCard.intuition}</div>
+            }} />
           </Section>
         )}
 
         {/* ── THE FULL PICTURE ── */}
         {activeCard.advanced && (
           <Section title="THE FULL PICTURE" rgb={rgb} delay={618}>
-            <div style={{
+            <ParagraphText text={activeCard.advanced} style={{
               ...BODY_STYLE, fontWeight: 300,
               fontSize: TEXT.body,
               color: IVORY(A.phi),
-            }}>{activeCard.advanced}</div>
+            }} />
           </Section>
         )}
 
