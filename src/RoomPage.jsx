@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { SUBCATEGORIES } from "./subcategories.js";
 import { TOPIC_CARDS } from "./topicCards.js";
 import { DOOR_META } from "./DoorHall.jsx";
-import WikiSummary from "./WikiSummary.jsx";
+import WikiCard from "./WikiCard.jsx";
 import { F, S, A, GOLD, IVORY, EASE, TEXT, DISPLAY_STYLE, BODY_STYLE, ACCENT_STYLE, textGlow, boxGlow } from "./phi.js";
 
 /**
@@ -421,42 +421,12 @@ export default function RoomPage({ doorKey, subId, cardId, onBack }) {
           </Section>
         )}
 
-        {/* ── EXPLORE FURTHER — Wikipedia links ── */}
+        {/* ── EXPLORE FURTHER — Wikipedia powered summaries ── */}
         {hasLinks && (
           <Section title="EXPLORE FURTHER" rgb={rgb} delay={618}>
             <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
               {activeCard.links.map((link, i) => (
-                <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                  style={{
-                    display: "flex", alignItems: "center", gap: S.xs,
-                    padding: `${S.xs} ${S.sm}`,
-                    background: `rgba(${rgb},0.04)`,
-                    border: `1px solid rgba(${rgb},${A.ghost})`,
-                    borderRadius: S._3xs,
-                    textDecoration: "none",
-                    transition: `all 382ms ${EASE}`,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = `rgba(${rgb},${A.ghost})`;
-                    e.currentTarget.style.borderColor = `rgba(${rgb},${A.phi})`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = `rgba(${rgb},0.04)`;
-                    e.currentTarget.style.borderColor = `rgba(${rgb},${A.ghost})`;
-                  }}
-                >
-                  <span style={{ fontSize: TEXT.body }}>📖</span>
-                  <span style={{
-                    ...BODY_STYLE, fontWeight: 400,
-                    fontSize: TEXT.body,
-                    color: `rgba(${rgb},${A.phi})`,
-                    flex: 1,
-                  }}>{link.label}</span>
-                  <span style={{
-                    ...DISPLAY_STYLE, fontSize: TEXT.caption,
-                    color: `rgba(${rgb},${A.ghost})`,
-                  }}>→</span>
-                </a>
+                <WikiCard key={i} label={link.label} url={link.url} rgb={rgb} index={i} />
               ))}
             </div>
           </Section>
