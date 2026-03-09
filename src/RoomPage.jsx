@@ -131,40 +131,57 @@ function SongRow({ song, rgb }) {
   );
 }
 
-// ── Section Toggle ───────────────────────────────────────────
+// ── Section Toggle — clearly a dropdown, instinctually clickable ──
 function Section({ title, rgb, children, defaultOpen = false, delay = 0 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [hover, setHover] = useState(false);
   return (
     <div style={{ width: "100%", animation: `fadeUp 618ms ${delay}ms both ease` }}>
-      <button onClick={() => setOpen(o => !o)} style={{
-        width: "100%",
-        display: "flex", alignItems: "center", gap: S.xs,
-        background: "none", border: "none", cursor: "pointer",
-        padding: `${S.sm} 0`,
-        borderBottom: `1px solid rgba(${rgb},${open ? A.ghost : A.ghost})`,
-        transition: `all 382ms ${EASE}`,
-      }}>
+      <button onClick={() => setOpen(o => !o)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          width: "100%",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: S.sm,
+          background: hover
+            ? `rgba(${rgb},${A.ghost})`
+            : open
+              ? `rgba(${rgb},0.08)`
+              : `rgba(${rgb},0.04)`,
+          border: `1px solid rgba(${rgb},${hover ? A.phi : open ? A.ghost : A.ghost})`,
+          borderRadius: open ? `${S._2xs} ${S._2xs} 0 0` : S._2xs,
+          cursor: "pointer",
+          padding: `${S.sm} ${S.md}`,
+          transition: `all 382ms ${EASE}`,
+          boxShadow: hover ? `0 0 18px rgba(${rgb},0.08)` : "none",
+        }}
+      >
         <span style={{
           ...DISPLAY_STYLE,
           fontSize: TEXT.heading,
           letterSpacing: "0.146em",
-          color: `rgba(${rgb},${open ? A.phi : A.ghost})`,
+          color: `rgba(${rgb},${hover ? A.full : open ? A.phi : A.phi})`,
           transition: `color 382ms`,
         }}>{title}</span>
-        <div style={{
-          flex: 1, height: "1px",
-          background: `rgba(${rgb},${open ? A.ghost : A.ghost})`,
-        }} />
         <span style={{
-          fontSize: TEXT.label,
-          color: `rgba(${rgb},${open ? A.phi : A.ghost})`,
+          fontSize: TEXT.heading,
+          color: `rgba(${rgb},${hover ? A.full : A.phi})`,
           transition: `all 382ms ${EASE}`,
           transform: open ? "rotate(180deg)" : "none",
           display: "inline-block",
+          flexShrink: 0,
         }}>▾</span>
       </button>
       {open && (
-        <div style={{ padding: `${S.md} 0`, animation: "fadeIn 382ms ease" }}>
+        <div style={{
+          padding: `${S.md}`,
+          background: `rgba(${rgb},0.03)`,
+          border: `1px solid rgba(${rgb},${A.ghost})`,
+          borderTop: "none",
+          borderRadius: `0 0 ${S._2xs} ${S._2xs}`,
+          animation: "fadeIn 382ms ease",
+        }}>
           {children}
         </div>
       )}
