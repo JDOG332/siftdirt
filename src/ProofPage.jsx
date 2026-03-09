@@ -217,8 +217,13 @@ function ResultCard({ result, index, onClick }) {
   const [hover, setHover] = useState(false);
   const isCard = result.type === "card";
   const rgb = isCard ? (DOOR_COLORS[result.doorName] || "201,168,76") : "201,168,76";
-  const title = isCard ? (result.card?.title || "Untitled") : (result.node?.text || "Untitled");
-  const subtitle = isCard ? (result.card?.simple || "") : "";
+  const title = isCard
+    ? (result.card?.title || "Untitled")
+    : (result.node?.truth || result.node?.dare || "Untitled");
+
+  const subtitle = isCard
+    ? (result.card?.simple || "")
+    : (result.node?.dare || result.node?.path || "");
 
   return (
     <div onClick={onClick}
