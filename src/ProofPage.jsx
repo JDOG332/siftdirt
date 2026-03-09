@@ -391,7 +391,7 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
           Type anything that matters to you. Watch all ten doors respond.
         </p>
 
-        {/* ── EXPLORE NAVIGATION — prominent, not afterthoughts ── */}
+        {/* ── EXPLORE NAVIGATION — true paths to walk ── */}
         <div style={{
           display: "flex", gap: S.md, width: "100%", justifyContent: "center",
           animation: "fadeUp 618ms 300ms both ease",
@@ -401,8 +401,17 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
           <NavLink label="✦ MATHEMATICS" onClick={onMath} />
         </div>
 
-        {/* Search input */}
-        <div style={{ width: "100%", animation: "fadeUp 618ms 382ms both ease", marginBottom: S.md }}>
+        {/* ── THE TETRACTYS — the sacred architecture, seen first ── */}
+        <div style={{ marginBottom: S.md, width: "100%" }}>
+          <TetractysDisplay
+            scores={doorScores}
+            topDoor={topDoor}
+            onDoorSelect={onDoorSelect}
+          />
+        </div>
+
+        {/* ── SEARCH — the tool that activates the temple ── */}
+        <div style={{ width: "100%", animation: "fadeUp 618ms 618ms both ease", marginBottom: S.md }}>
           <input ref={inputRef} value={query} onChange={handleInput}
             placeholder="What are you searching for?"
             spellCheck={false}
@@ -421,15 +430,6 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
             }}
             onFocus={(e) => e.target.style.borderColor = GOLD(A.phi)}
             onBlur={(e) => e.target.style.borderColor = GOLD(A.ghost)}
-          />
-        </div>
-
-        {/* Dynamic Tetractys Pyramid */}
-        <div style={{ marginBottom: S.lg, width: "100%" }}>
-          <TetractysDisplay
-            scores={doorScores}
-            topDoor={topDoor}
-            onDoorSelect={onDoorSelect}
           />
         </div>
 
