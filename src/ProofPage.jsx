@@ -71,24 +71,34 @@ function DoorOrnament({ size, alpha }) {
   );
 }
 
-// ─── BACK BUTTON (with breathing glow) ───────────────────────
+// ─── BACK BUTTON (frosted header strip) ───────────────────────
 function BackButton({ onClick }) {
   const [h, setH] = useState(false);
   return (
-    <button onClick={onClick}
-      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
-      className="foot-glow"
-      style={{
-        position: "absolute", top: S.md, left: S.md, zIndex: 999,
-        background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE,
-        fontSize: TEXT.body,
-        color: GOLD(h ? A.full : A.phi),
-        transition: `color 618ms ${EASE}`,
-        padding: `${S.xs} ${S.sm}`,
-        userSelect: "none",
-      }}
-    >← BACK</button>
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 999,
+      height: "clamp(56px, 8vh, 72px)",
+      background: "linear-gradient(180deg, rgba(3,3,10,0.92) 0%, rgba(3,3,10,0.6) 70%, transparent 100%)",
+      backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+      display: "flex", alignItems: "center",
+      paddingLeft: S.md,
+      pointerEvents: "none",
+    }}>
+      <button onClick={onClick}
+        onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
+        className="foot-glow"
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          ...DISPLAY_STYLE,
+          fontSize: TEXT.body,
+          color: GOLD(h ? A.full : A.phi),
+          transition: `color 618ms ${EASE}`,
+          padding: `${S.xs} ${S.sm}`,
+          userSelect: "none",
+          pointerEvents: "auto",
+        }}
+      >← BACK</button>
+    </div>
   );
 }
 

@@ -40,13 +40,24 @@ export default function MathHubPage({ onBack, onVitruvian, onCRT }) {
       display: "flex", flexDirection: "column", alignItems: "center",
       padding: `0 ${S.sm}`, paddingBottom: S._2xl,
     }}>
-      <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
-        position: "absolute", top: S.md, left: S.md, zIndex: 99,
-        background: "none", border: "none", cursor: "pointer",
-        ...DISPLAY_STYLE, fontSize: TEXT.body,
-        color: GOLD(backH ? A.full : A.phi),
-        transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
-      }}>← BACK</button>
+      {/* Back — frosted header strip */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 99,
+        height: "clamp(56px, 8vh, 72px)",
+        background: "linear-gradient(180deg, rgba(3,3,10,0.92) 0%, rgba(3,3,10,0.6) 70%, transparent 100%)",
+        backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+        display: "flex", alignItems: "center",
+        paddingLeft: S.md,
+        pointerEvents: "none",
+      }}>
+        <button onClick={onBack} onMouseEnter={() => setBackH(true)} onMouseLeave={() => setBackH(false)} style={{
+          background: "none", border: "none", cursor: "pointer",
+          ...DISPLAY_STYLE, fontSize: TEXT.body,
+          color: GOLD(backH ? A.full : A.phi),
+          transition: `color 618ms ${EASE}`, padding: `${S.xs} ${S.sm}`,
+          pointerEvents: "auto",
+        }}>← BACK</button>
+      </div>
 
       <div style={{ width: "100%", maxWidth: "30rem", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "clamp(80px, 14vh, 130px)", gap: S.md }}>
         <h1 style={{ ...DISPLAY_STYLE, fontSize: TEXT.hero, color: GOLD(A.phi), animation: "fadeUp 618ms 100ms both ease", textShadow: textGlow("201,168,76", A.phi) }}>MATHEMATICS</h1>
