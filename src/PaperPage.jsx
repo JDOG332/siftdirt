@@ -19,12 +19,12 @@ function PaperSection({ section, index }) {
         padding: `${S.sm} 0`, borderBottom: `1px solid ${GOLD(open ? A.ghost : A.ghost)}`,
         textAlign: "left",
       }}>
-        <span style={{ ...DISPLAY_STYLE, fontSize: TEXT.caption, color: GOLD(open ? A.phi : A.ghost), transition: `color 382ms ${EASE}`, flex: 1 }}>{section.title.toUpperCase()}</span>
-        <span style={{ fontSize: TEXT.caption, color: GOLD(open ? A.phi : A.ghost), transition: `all 382ms ${EASE}`, transform: open ? "rotate(180deg)" : "none", display: "inline-block" }}>▾</span>
+        <span style={{ ...DISPLAY_STYLE, fontSize: TEXT.body, color: GOLD(open ? A.full : A.phi), transition: `color 382ms ${EASE}`, flex: 1 }}>{section.title.toUpperCase()}</span>
+        <span style={{ fontSize: TEXT.label, color: GOLD(open ? A.full : A.phi), transition: `all 382ms ${EASE}`, transform: open ? "rotate(180deg)" : "none", display: "inline-block" }}>▾</span>
       </button>
       {open && (
         <div style={{ padding: `${S.md} 0`, animation: "fadeIn 382ms ease" }}>
-          <pre style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.label, color: IVORY(A.phi), whiteSpace: "pre-wrap", wordWrap: "break-word", margin: 0 }}>{section.content}</pre>
+          <pre style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.heading, color: IVORY(A.phi), whiteSpace: "pre-wrap", wordWrap: "break-word", margin: 0, lineHeight: 1.618 }}>{section.content}</pre>
         </div>
       )}
     </div>
