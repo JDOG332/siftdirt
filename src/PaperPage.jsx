@@ -50,7 +50,7 @@ export default function PaperPage({ onBack }) {
 
       <div style={{ width: "100%", maxWidth: "40rem", display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "clamp(80px, 12vh, 120px)" }}>
         <h1 style={{ ...DISPLAY_STYLE, fontSize: TEXT.heading, color: GOLD(A.phi), textAlign: "center", animation: "fadeUp 618ms 100ms both ease", marginBottom: S._2xs }}>CONVERGENT RECOGNITION THEORY</h1>
-        <p style={{ ...ACCENT_STYLE, fontSize: TEXT.label, color: IVORY(A.ghost), textAlign: "center", animation: "fadeUp 618ms 236ms both ease", marginBottom: S.xs }}>A mathematical framework for self-recognizing systems</p>
+        <p style={{ ...ACCENT_STYLE, fontSize: TEXT.body, color: IVORY(A.phi), textAlign: "center", animation: "fadeUp 618ms 236ms both ease", marginBottom: S.xs }}>A mathematical framework for self-recognizing systems</p>
 
         {/* The equation — atmospheric display */}
         <div style={{
