@@ -24,7 +24,7 @@ function PaperSection({ section, index }) {
       </button>
       {open && (
         <div style={{ padding: `${S.md} 0`, animation: "fadeIn 382ms ease" }}>
-          <pre style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.heading, color: IVORY(A.phi), whiteSpace: "pre-wrap", wordWrap: "break-word", margin: 0, lineHeight: 1.618 }}>{section.content}</pre>
+          <pre style={{ ...BODY_STYLE, fontWeight: 400, fontSize: TEXT.body, color: IVORY(A.phi), whiteSpace: "pre-wrap", wordWrap: "break-word", margin: 0, lineHeight: 1.618 }}>{section.content}</pre>
         </div>
       )}
     </div>
