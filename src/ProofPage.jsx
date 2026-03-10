@@ -106,23 +106,137 @@ function BackButton({ onClick }) {
 function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
   const W = typeof window !== "undefined" ? window.innerWidth : 800;
   const H = typeof window !== "undefined" ? window.innerHeight : 900;
-  // Dynamic card sizing — rectangular Egyptian blocks (φ ratio)
+  const isMobile = W < 520;
+
+  // ── SHARED: flat list of all doors for mobile grid ──
+  const allDoors = TETRACTYS.flat();
+
+  // ── DESKTOP: pyramid sizing ──
   const cardByH = Math.round(H * 0.56 / 4.236);
   const cardByW = Math.round(W / 4.236);
   const cardH = Math.round(Math.max(72, Math.min(cardByH, cardByW, 110)));
-  const cardW = Math.round(cardH * 1.618);  // φ ratio — wider than tall
+  const cardW = Math.round(cardH * 1.618);
   const gap  = Math.round(Math.max(7, Math.min(11, W / 62)));
   const rowGap = Math.round(gap * 1.1);
   const emojiSz = Math.round(cardH * 0.38);
 
-  // Label size per ROW — uniform within each row, sized by the longest name
-  // This ensures visual symmetry: every block in a row has identical typography
+  // ── MOBILE: grid sizing ──
+  const mCardW = Math.round((W - 48 - 12) / 2); // 2 columns, padding + gap
+  const mCardH = Math.round(mCardW * 0.618);     // inverse φ — landscape cards
+  const mEmojiSz = Math.round(mCardH * 0.36);
+  const mLabelSz = Math.max(10, Math.round(mCardW * 0.075));
+
+  // Label size per ROW (desktop only)
   const rowLabelSizes = TETRACTYS.map((row) => {
     const longest = Math.max(...row.map(d => d.name.length));
     const base = Math.round(cardW * 0.10);
     return Math.max(8, Math.round(base * Math.sqrt(8 / Math.max(8, longest))));
   });
 
+  // ── Shared card renderer ──
+  function DoorCard({ door, labelSize, cardWidth, cardHeight, emojiSize }) {
+    const pct = scores?.[door.key] ?? 0;
+    const isTop = topDoor === door.key;
+    const rgb = DOOR_COLORS[door.key] || "201,168,76";
+    const hasScore = scores !== null && Object.keys(scores).length > 0;
+    const bgOp  = hasScore ? Math.max(0.08, pct / 100 * 0.9) : 0.12;
+    const borOp = hasScore ? Math.max(0.22, pct / 100 * 0.6) : 0.30;
+    const txtOp = hasScore ? Math.max(0.70, Math.min(1.0, pct / 100 * 1.4)) : 0.90;
+    const emjOp = hasScore ? Math.max(0.75, Math.min(1.0, pct / 60)) : 0.95;
+
+    return (
+      <div key={door.key}
+        onClick={() => onDoorSelect(DOOR_DATA_KEY[door.key])}
+        style={{
+          width: cardWidth, height: cardHeight,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          gap: Math.round(cardHeight * 0.06),
+          borderRadius: 6,
+          background: `rgba(${rgb},${bgOp})`,
+          border: `1px solid rgba(${rgb},${borOp})`,
+          boxShadow: isTop
+            ? `0 0 ${cardWidth * 0.24}px rgba(${rgb},0.22), 0 0 ${cardWidth * 0.45}px rgba(${rgb},0.07)`
+            : pct > 20 ? `0 0 ${cardWidth * 0.12}px rgba(${rgb},0.09)` : "none",
+          transition: `all 618ms ${EASE}`,
+          animation: isTop ? "proofPulse 2.618s ease-in-out infinite" : "none",
+          cursor: "pointer",
+          position: "relative",
+          overflow: "visible",
+          padding: `${Math.round(cardHeight * 0.08)}px ${Math.round(cardWidth * 0.06)}px`,
+          userSelect: "none",
+        }}
+      >
+        {pct > 10 && (
+          <div style={{
+            position: "absolute", inset: 0, borderRadius: 7,
+            background: `radial-gradient(ellipse at center, rgba(${rgb},${Math.min(0.12, pct/300)}) 0%, transparent 70%)`,
+            pointerEvents: "none",
+          }} />
+        )}
+        <div style={{
+          position: "absolute", top: 0, left: "15%", right: "15%", height: 1,
+          background: `rgba(${rgb},${borOp * 1.5})`,
+          transition: `background 618ms ease`,
+        }} />
+        <div style={{
+          fontSize: emojiSize, lineHeight: 1,
+          opacity: emjOp,
+          filter: pct > 5 ? `drop-shadow(0 0 ${Math.round(emojiSize * 0.4)}px rgba(${rgb},${Math.min(0.6, pct/60)}))` : "none",
+          transition: `all 618ms ease`,
+          flexShrink: 0,
+        }}>{door.emoji}</div>
+        <div style={{
+          fontFamily: F.display,
+          fontWeight: 900,
+          fontSize: labelSize,
+          letterSpacing: "0.04em",
+          color: `rgba(${rgb},${txtOp})`,
+          textAlign: "center",
+          transition: `color 618ms ease`,
+          lineHeight: 1.1,
+          width: "100%",
+          whiteSpace: "nowrap",
+        }}>{door.name}</div>
+        {hasScore && pct > 0 && (
+          <div style={{
+            fontFamily: F.body, fontWeight: 300,
+            fontSize: Math.max(7, Math.round(cardHeight * 0.09)),
+            color: `rgba(${rgb},${Math.max(0.3, pct/100)})`,
+            transition: `color 618ms ease`,
+          }}>{Math.round(pct)}%</div>
+        )}
+      </div>
+    );
+  }
+
+  // ── MOBILE: 2-column grid ──
+  if (isMobile) {
+    return (
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr",
+        gap: 12,
+        width: "100%",
+        maxWidth: "100%",
+        padding: "0 16px",
+        animation: "fadeUp 1s 382ms both ease",
+      }}>
+        {allDoors.map((door) => (
+          <DoorCard
+            key={door.key}
+            door={door}
+            labelSize={mLabelSz}
+            cardWidth="auto"
+            cardHeight={mCardH}
+            emojiSize={mEmojiSz}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // ── DESKTOP: pyramid layout ──
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center",
@@ -131,91 +245,16 @@ function TetractysDisplay({ scores, topDoor, onDoorSelect }) {
     }}>
       {TETRACTYS.map((row, ri) => (
         <div key={ri} style={{ display: "flex", gap, justifyContent: "center" }}>
-          {row.map((door) => {
-            const pct = scores?.[door.key] ?? 0;
-            const isTop = topDoor === door.key;
-            const rgb = DOOR_COLORS[door.key] || "201,168,76";
-            const hasScore = scores !== null && Object.keys(scores).length > 0;
-            const bgOp  = hasScore ? Math.max(0.08, pct / 100 * 0.9) : 0.12;
-            const borOp = hasScore ? Math.max(0.22, pct / 100 * 0.6) : 0.30;
-            const txtOp = hasScore ? Math.max(0.70, Math.min(1.0, pct / 100 * 1.4)) : 0.90;
-            const emjOp = hasScore ? Math.max(0.75, Math.min(1.0, pct / 60)) : 0.95;
-            const rowFontSize = rowLabelSizes[ri];
-
-            return (
-              <div key={door.key}
-                onClick={() => onDoorSelect(DOOR_DATA_KEY[door.key])}
-                style={{
-                  width: cardW, height: cardH,
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center",
-                  gap: Math.round(cardH * 0.06),
-                  borderRadius: 6,
-                  background: `rgba(${rgb},${bgOp})`,
-                  border: `1px solid rgba(${rgb},${borOp})`,
-                  boxShadow: isTop
-                    ? `0 0 ${cardW * 0.24}px rgba(${rgb},0.22), 0 0 ${cardW * 0.45}px rgba(${rgb},0.07)`
-                    : pct > 20 ? `0 0 ${cardW * 0.12}px rgba(${rgb},0.09)` : "none",
-                  transition: `all 618ms ${EASE}`,
-                  animation: isTop ? "proofPulse 2.618s ease-in-out infinite" : "none",
-                  cursor: "pointer",
-                  position: "relative",
-                  overflow: "visible",
-                  padding: `${Math.round(cardH * 0.08)}px ${Math.round(cardW * 0.06)}px`,
-                  userSelect: "none",
-                }}
-              >
-                {/* Inner radial glow on activation */}
-                {pct > 10 && (
-                  <div style={{
-                    position: "absolute", inset: 0, borderRadius: 7,
-                    background: `radial-gradient(ellipse at center, rgba(${rgb},${Math.min(0.12, pct/300)}) 0%, transparent 70%)`,
-                    pointerEvents: "none",
-                  }} />
-                )}
-
-                {/* Top rule glow */}
-                <div style={{
-                  position: "absolute", top: 0, left: "15%", right: "15%", height: 1,
-                  background: `rgba(${rgb},${borOp * 1.5})`,
-                  transition: `background 618ms ease`,
-                }} />
-
-                {/* Emoji with drop-shadow glow */}
-                <div style={{
-                  fontSize: emojiSz, lineHeight: 1,
-                  opacity: emjOp,
-                  filter: pct > 5 ? `drop-shadow(0 0 ${Math.round(emojiSz * 0.4)}px rgba(${rgb},${Math.min(0.6, pct/60)}))` : "none",
-                  transition: `all 618ms ease`,
-                  flexShrink: 0,
-                }}>{door.emoji}</div>
-
-                {/* Label — uniform size per row for visual symmetry */}
-                <div style={{
-                  fontFamily: F.display,
-                  fontWeight: 900,
-                  fontSize: rowFontSize,
-                  letterSpacing: "0.04em",
-                  color: `rgba(${rgb},${txtOp})`,
-                  textAlign: "center",
-                  transition: `color 618ms ease`,
-                  lineHeight: 1.1,
-                  width: "100%",
-                  whiteSpace: "nowrap",
-                }}>{door.name}</div>
-
-                {/* Score percentage */}
-                {hasScore && pct > 0 && (
-                  <div style={{
-                    fontFamily: F.body, fontWeight: 300,
-                    fontSize: Math.max(7, Math.round(cardH * 0.09)),
-                    color: `rgba(${rgb},${Math.max(0.3, pct/100)})`,
-                    transition: `color 618ms ease`,
-                  }}>{Math.round(pct)}%</div>
-                )}
-              </div>
-            );
-          })}
+          {row.map((door) => (
+            <DoorCard
+              key={door.key}
+              door={door}
+              labelSize={rowLabelSizes[ri]}
+              cardWidth={cardW}
+              cardHeight={cardH}
+              emojiSize={emojiSz}
+            />
+          ))}
         </div>
       ))}
     </div>
