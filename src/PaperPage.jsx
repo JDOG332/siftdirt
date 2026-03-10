@@ -73,6 +73,41 @@ export default function PaperPage({ onBack }) {
           }}>Ψ = R₁₂ × G</div>
         </div>
 
+        {/* PDF Paper Link */}
+        <a href="https://drive.google.com/file/d/16kvjpYSCDOerUKxxogDRdbi-37m7KAKL/view?usp=share_link"
+          target="_blank" rel="noopener noreferrer"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            gap: S.xs,
+            padding: `${S.sm} ${S.lg}`,
+            background: `rgba(201,168,76,0.06)`,
+            border: `1px solid ${GOLD(A.ghost)}`,
+            borderRadius: S._2xs,
+            animation: "fadeUp 618ms 450ms both ease",
+            marginBottom: S.lg,
+            maxWidth: "26rem", width: "100%",
+            textDecoration: "none",
+            transition: `all 618ms ${EASE}`,
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = GOLD(A.phi);
+            e.currentTarget.style.background = `rgba(201,168,76,0.10)`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = GOLD(A.ghost);
+            e.currentTarget.style.background = `rgba(201,168,76,0.06)`;
+          }}
+        >
+          <span style={{ fontSize: "clamp(18px, 3vmin, 24px)" }}>📄</span>
+          <span style={{
+            ...DISPLAY_STYLE,
+            fontSize: TEXT.label,
+            letterSpacing: "0.12em",
+            color: GOLD(A.phi),
+          }}>VIEW THE FULL PAPER (PDF)</span>
+        </a>
+
         <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
           {SECTIONS.map((s, i) => <PaperSection key={i} section={s} index={i} />)}
         </div>
