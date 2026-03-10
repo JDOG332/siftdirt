@@ -378,7 +378,7 @@ export default function LandingPage({ onStart }) {
           letterSpacing: "0.06em",
           textAlign: "center",
           whiteSpace: "nowrap",
-        }}>"Connecting consciousness..."</div>
+        }}>"...connecting consciousness..."</div>
 
         <button
           onMouseEnter={() => setEnterHover(true)}
