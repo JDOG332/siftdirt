@@ -334,7 +334,7 @@ export default function LandingPage({ onStart }) {
         <VitruvianCanvas stateRef={vitStateRef} />
       </div>
 
-      {/* ── SIFTDIRT.COM — PHIi5 from top = 9.0vh — mirrors ENTER bottom exactly ── */}
+      {/* ── WELCOME — PHIi5 from top = 9.0vh — mirrors START bottom exactly ── */}
       <div style={{
         position: "absolute",
         top: `${(PHIi5 * 100).toFixed(2)}vh`,
@@ -354,7 +354,7 @@ export default function LandingPage({ onStart }) {
             fontWeight: 600,
             color: "rgba(201,168,76,0.88)",
             textShadow: "0 0 24px rgba(201,168,76,0.45), 0 0 60px rgba(201,168,76,0.18)",
-          }}>SIFTDIRT.COM</div>
+          }}>WELCOME</div>
       </div>
 
       {/* ── Tagline + ENTER — PHIi5 = 9.0vh from bottom ── */}
