@@ -51,33 +51,32 @@ export default function App() {
     [go]
   );
 
-  /* ── LANDING ── */
+  /* ── Determine which scene to render ── */
+  let content = null;
+
   if (scene === "landing")
-    return <LandingPage onStart={handleLandingStart} />;
+    content = <LandingPage onStart={handleLandingStart} />;
 
-  /* ── POEMS ── */
-  if (scene === "poem-dol")
-    return <PoemUniverse poem="ask" onBack={goBack} />;
-  if (scene === "poem-rol")
-    return <PoemUniverse poem="explore" onBack={goBack} />;
-  if (scene === "poem-kal")
-    return <PoemUniverse poem="kal" onBack={goBack} />;
+  else if (scene === "poem-dol")
+    content = <PoemUniverse poem="ask" onBack={goBack} />;
+  else if (scene === "poem-rol")
+    content = <PoemUniverse poem="explore" onBack={goBack} />;
+  else if (scene === "poem-kal")
+    content = <PoemUniverse poem="kal" onBack={goBack} />;
 
-  /* ── MATH ── */
-  if (scene === "mathhub")
-    return (
+  else if (scene === "mathhub")
+    content = (
       <MathHubPage
         onBack={goBack}
         onVitruvian={() => go("vitruvian")}
         onCRT={() => go("paper")}
       />
     );
-  if (scene === "vitruvian") return <VitruvianPage onBack={goBack} />;
-  if (scene === "paper") return <PaperPage onBack={goBack} />;
+  else if (scene === "vitruvian") content = <VitruvianPage onBack={goBack} />;
+  else if (scene === "paper") content = <PaperPage onBack={goBack} />;
 
-  /* ── PROOF (main hub) ── */
-  if (scene === "proof")
-    return (
+  else if (scene === "proof")
+    content = (
       <ProofPage
         onBack={goBack}
         onDoorSelect={goToDoor}
@@ -88,9 +87,8 @@ export default function App() {
       />
     );
 
-  /* ── DOOR HALL ── */
-  if (scene === "door" && selectedDoor)
-    return (
+  else if (scene === "door" && selectedDoor)
+    content = (
       <DoorHall
         doorKey={selectedDoor}
         onBack={goBack}
@@ -98,9 +96,8 @@ export default function App() {
       />
     );
 
-  /* ── ROOM ── */
-  if (scene === "room" && selectedRoom)
-    return (
+  else if (scene === "room" && selectedRoom)
+    content = (
       <RoomPage
         doorKey={selectedRoom.doorKey}
         subId={selectedRoom.subId}
@@ -109,25 +106,29 @@ export default function App() {
       />
     );
 
-  /* ── POEMS (own scene, no shared cursor) ── */
-  if (scene === "poems")
-    return (
+  else if (scene === "poems")
+    content = (
       <PoemsPage
         onBack={goBack}
         onSelectPoem={(key) => go(`poem-${key}`)}
       />
     );
 
-  /* ── SCENES WITH SHARED CURSOR ── */
-  return (
-    <div style={{ minHeight: "100vh", background: "#03030a" }}>
-      <InfinityCursor />
-      {scene === "intro" && (
+  else if (scene === "intro")
+    content = (
+      <div style={{ minHeight: "100vh", background: "#03030a" }}>
         <IntroCanvas
           seedState={introSeedRef.current}
           onComplete={() => go("proof")}
         />
-      )}
-    </div>
+      </div>
+    );
+
+  /* ── ALWAYS render cursor + scene together ── */
+  return (
+    <>
+      <InfinityCursor />
+      {content}
+    </>
   );
 }

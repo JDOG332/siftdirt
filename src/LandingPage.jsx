@@ -5,7 +5,6 @@
  */
 
 import React, { useEffect, useRef, useState } from "react";
-import InfinityCursor from "./InfinityCursor.jsx";
 
 const PHI  = 1.6180339887;
 const TAU  = Math.PI * 2;
@@ -299,8 +298,6 @@ export default function LandingPage({ onStart }) {
       overflow: "hidden",
       fontFamily: "'Cinzel', serif",
     }}>
-
-      <InfinityCursor />
 
       {/* ── CSS animations ── */}
       <style>{`
