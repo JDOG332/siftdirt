@@ -403,20 +403,21 @@ function MirrorResult({ result, index, onClick }) {
 }
 
 // ─── NAV LINK — True exploration options, not afterthoughts ──
-function NavLink({ label, onClick }) {
+function NavLink({ label, onClick, rose }) {
   const [h, setH] = useState(false);
+  const c = rose ? (a) => `rgba(220,160,160,${a})` : GOLD;
   return (
     <button onClick={onClick}
       onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
       style={{
-        background: h ? `rgba(201,168,76,${A.ghost})` : `rgba(201,168,76,0.04)`,
-        border: `1px solid ${GOLD(h ? A.phi : A.ghost)}`,
+        background: h ? `rgba(${rose ? '220,160,160' : '201,168,76'},${A.ghost})` : `rgba(${rose ? '220,160,160' : '201,168,76'},0.04)`,
+        border: `1px solid ${c(h ? A.phi : A.ghost)}`,
         borderRadius: S._2xs,
         padding: `${S.xs} ${S.lg}`,
         ...DISPLAY_STYLE,
         fontSize: TEXT.label,
         letterSpacing: "0.146em",
-        color: GOLD(h ? A.full : A.phi),
+        color: c(h ? A.full : A.phi),
         cursor: "pointer",
         transition: `all 618ms ${EASE}`,
         boxShadow: h ? boxGlow("201,168,76", A.phi) : `0 0 12px rgba(201,168,76,0.04)`,
@@ -432,7 +433,7 @@ function NavLink({ label, onClick }) {
 // PROOF PAGE
 // ═══════════════════════════════════════════════════════════════
 
-export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems, onMath, autoSearch }) {
+export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems, onMath, onPromises, autoSearch }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [doorScores, setDoorScores] = useState({});
@@ -547,7 +548,8 @@ export default function ProofPage({ onBack, onDoorSelect, onRoomSelect, onPoems,
           marginBottom: S.md,
         }}>
           <NavLink label="✦ POEMS" onClick={onPoems} />
-          <NavLink label="✦ MATHEMATICS" onClick={onMath} />
+          <NavLink label="✦ MATH" onClick={onMath} />
+          <NavLink label="✦ PROMISES" onClick={onPromises} rose />
         </div>
 
         {/* ── THE TETRACTYS — the sacred architecture, seen first ── */}

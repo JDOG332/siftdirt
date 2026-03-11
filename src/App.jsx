@@ -9,6 +9,7 @@ import PoemUniverse from "./PoemUniverse.jsx";
 import MathHubPage from "./MathHubPage.jsx";
 import VitruvianPage from "./VitruvianPage.jsx";
 import PaperPage from "./PaperPage.jsx";
+import PromisesPage from "./PromisesPage.jsx";
 import InfinityCursor from "./InfinityCursor.jsx";
 import "./global.css";
 
@@ -74,6 +75,7 @@ export default function App() {
     );
   else if (scene === "vitruvian") content = <VitruvianPage onBack={goBack} />;
   else if (scene === "paper") content = <PaperPage onBack={goBack} />;
+  else if (scene === "promises") content = <PromisesPage onBack={goBack} />;
 
   else if (scene === "proof")
     content = (
@@ -83,6 +85,7 @@ export default function App() {
         onRoomSelect={goToRoom}
         onPoems={() => go("poems")}
         onMath={() => go("mathhub")}
+        onPromises={() => go("promises")}
         autoSearch={proofAutoSearch}
       />
     );
