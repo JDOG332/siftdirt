@@ -130,7 +130,7 @@ export default function PromisesPage({ onBack }) {
         <div style={{
           fontFamily: "'Cormorant Garamond', serif",
           fontSize: "clamp(24px, 4vw, 30px)",
-          fontStyle: "italic", color: "rgba(232,228,210,1.0)",
+          color: "rgba(232,228,210,1.0)",
           lineHeight: 1.618,
           textAlign: "center",
           animation: "fadeUp 618ms 300ms both ease",
@@ -177,7 +177,7 @@ export default function PromisesPage({ onBack }) {
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "clamp(22px, 3.5vw, 28px)",
-              fontStyle: "italic", color: "rgba(232,228,210,1.0)",
+              color: "rgba(232,228,210,1.0)",
               lineHeight: 1.9, maxWidth: 460, margin: "0 auto",
               marginBottom: "1rem",
             }}>{p.offering}</div>
@@ -186,7 +186,7 @@ export default function PromisesPage({ onBack }) {
             <div style={{
               fontFamily: "'Cormorant Garamond', serif",
               fontSize: "clamp(20px, 3.2vw, 26px)",
-              fontStyle: "italic", color: "rgba(201,168,76,1.0)",
+              color: "rgba(201,168,76,1.0)",
               lineHeight: 1.8, maxWidth: 420, margin: "0 auto",
             }}>{p.heart}</div>
 
@@ -212,7 +212,7 @@ export default function PromisesPage({ onBack }) {
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: "clamp(22px, 3.5vw, 28px)",
-            fontStyle: "italic", color: "rgba(232,228,210,1.0)",
+            color: "rgba(232,228,210,1.0)",
             lineHeight: 2.0, maxWidth: 440, margin: "0 auto",
             marginBottom: "1.618rem",
           }}>
@@ -243,7 +243,7 @@ export default function PromisesPage({ onBack }) {
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: "clamp(20px, 4vw, 28px)",
-            fontStyle: "italic", color: "rgba(232,228,210,1.0)",
+            color: "rgba(232,228,210,1.0)",
             lineHeight: 1.9,
             maxWidth: 400, margin: "1.618rem auto 0",
             animation: "starGlow 6s 1s ease-in-out infinite",
@@ -282,7 +282,7 @@ export default function PromisesPage({ onBack }) {
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: "clamp(18px, 2.5vw, 22px)",
-            fontStyle: "italic", color: "rgba(201,168,76,1.0)",
+            color: "rgba(201,168,76,1.0)",
             marginTop: "1rem",
             letterSpacing: 1,
           }}>read it forward · read it backward · flip it upside down</div>
@@ -290,7 +290,7 @@ export default function PromisesPage({ onBack }) {
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: "clamp(20px, 2.8vw, 26px)",
-            fontStyle: "italic", color: "rgba(232,228,210,1.0)",
+            color: "rgba(232,228,210,1.0)",
             marginTop: "0.618rem",
           }}>it cannot be broken</div>
         </div>
@@ -300,7 +300,7 @@ export default function PromisesPage({ onBack }) {
           <div style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: "clamp(26px, 4.5vw, 38px)",
-            fontStyle: "italic", color: "rgba(232,228,210,1.0)",
+            color: "rgba(232,228,210,1.0)",
             letterSpacing: 1, lineHeight: 1.618,
             marginBottom: "1rem",
             animation: "starGlow 5s ease-in-out infinite",
